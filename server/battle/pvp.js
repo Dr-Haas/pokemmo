@@ -76,7 +76,7 @@ function sanitizeMove(move) {
     const maxPp = int(move.maxPp, 1, 64, 10);
     return {
         name: text(move.name, 30, "tackle"),
-        displayName: text(move.displayName || move.name, 30, "Tackle"),
+        displayName: text(move.displayName || move.name, 30, "Charge"),
         power: move.power == null ? null : int(move.power, 0, 250, 40),
         accuracy: move.accuracy == null ? null : int(move.accuracy, 1, 100, 100),
         type: text(move.type, 12, "Normal"),

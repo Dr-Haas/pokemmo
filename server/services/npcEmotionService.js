@@ -21,13 +21,13 @@ const NEUTRAL_EMOTION = {
 };
 
 const CHOICES = {
-    TALK: { id: "TALK", label: "PRAAT" },
-    LISTEN: { id: "LISTEN", label: "LUISTER" },
-    ASK: { id: "ASK", label: "VRAAG DOOR" },
-    SHARE: { id: "SHARE", label: "DEEL CLUE" },
-    PRESS: { id: "PRESS", label: "ZET DRUK" },
-    REUNITE: { id: "REUNITE", label: "VERENIG DORP" },
-    GOODBYE: { id: "GOODBYE", label: "TOT ZIENS" }
+    TALK: { id: "TALK", label: "PARLER" },
+    LISTEN: { id: "LISTEN", label: "ÉCOUTER" },
+    ASK: { id: "ASK", label: "QUESTIONNER" },
+    SHARE: { id: "SHARE", label: "DONNER INDICE" },
+    PRESS: { id: "PRESS", label: "INSISTER" },
+    REUNITE: { id: "REUNITE", label: "RÉUNIR LE BOURG" },
+    GOODBYE: { id: "GOODBYE", label: "AU REVOIR" }
 };
 
 const ACTION_APPRAISALS = [
@@ -127,331 +127,331 @@ const NPC_DEFINITIONS = [
     {
         id: "lyra",
         name: "Lyra",
-        title: "Town Nurse",
+        title: "Infirmière du bourg",
         map: "town",
         x: 318,
         y: 1186,
         spriteKey: "players",
         spriteFrame: "nurse_front.png",
         clueId: "sleep_hum",
-        clueTitle: "Slaaphum",
-        clueText: "Lyra heard Sol humming in his sleep about a gate that sings under moonlight.",
+        clueTitle: "Fredonnement",
+        clueText: "Lyra a entendu Sol fredonner en dormant, à propos d'une porte qui chante au clair de lune.",
         shareNeed: 0,
         revealThreshold: 2,
         pressThreshold: 3,
-        speakingStyle: "Gentle, composed, and warm. Speaks like someone steadying a room in crisis.",
-        description: "The nurse who keeps Echo Town calm, but she has been carrying everyone's worry alone.",
+        speakingStyle: "Douce, posée et chaleureuse. Parle comme quelqu'un qui apaise une pièce en pleine crise.",
+        description: "L'infirmière qui garde le Bourg Écho calme, mais qui porte seule l'inquiétude de tout le monde.",
         personality: { O: 0.71, C: 0.84, E: 0.52, A: 0.89, N: 0.46, H: 0.82 },
         goals: [
-            { id: "lyra-keep-calm", content: "Keep the town calm before moonrise.", priority: 0.92, mutable: true, status: "active" },
-            { id: "lyra-protect-sol", content: "Protect Sol from the Lantern's strange whispers.", priority: 0.88, mutable: true, status: "active" }
+            { id: "lyra-keep-calm", content: "Garder le bourg calme avant le lever de la lune.", priority: 0.92, mutable: true, status: "active" },
+            { id: "lyra-protect-sol", content: "Protéger Sol des étranges murmures de la Lanterne.", priority: 0.88, mutable: true, status: "active" }
         ],
-        opening: "Lyra folds a towel with measured hands. \"The whole town is holding its breath tonight.\"",
-        support: "Lyra's shoulders loosen. \"Thank you. Everyone comes to me frightened, and I forgot I was allowed to be frightened too.\"",
-        guarded: "\"I want to help, but I can't scatter panic across town. Earn a little trust first.\"",
-        pressure: "\"Please don't turn this into a hunt. Sol is scared enough already.\"",
-        completion: "\"Hear that? The lantern finally sounds like a lullaby again.\""
+        opening: "Lyra plie une serviette avec soin. \"Tout le bourg retient son souffle ce soir.\"",
+        support: "Les épaules de Lyra se détendent. \"Merci. Tout le monde vient me voir effrayé, et j'avais oublié que j'avais le droit d'avoir peur moi aussi.\"",
+        guarded: "\"Je veux t'aider, mais je ne peux pas semer la panique dans le bourg. Gagne d'abord un peu ma confiance.\"",
+        pressure: "\"S'il te plaît, n'en fais pas une chasse à l'homme. Sol a déjà assez peur.\"",
+        completion: "\"Tu entends ? La lanterne ressemble enfin de nouveau à une berceuse.\""
     },
     {
         id: "piper",
         name: "Piper",
-        title: "Courier",
+        title: "Coursière",
         map: "town",
         x: 412,
         y: 1188,
         spriteKey: "players",
         spriteFrame: "femaletrainer_front.png",
         clueId: "ribbon_fence",
-        clueTitle: "Zilveren Lint",
-        clueText: "Piper's courier satchel snagged on the west fence, and a silver ribbon tore free beside it.",
+        clueTitle: "Ruban d'argent",
+        clueText: "La sacoche de Piper s'est accrochée à la clôture ouest, et un ruban d'argent s'est déchiré juste à côté.",
         shareNeed: 0,
         revealThreshold: 2,
         pressThreshold: 2,
-        speakingStyle: "Fast, bright, and restless. Her words arrive in nervous bursts.",
-        description: "A courier who hides nerves behind speed and jokes. She saw more than she admits at first.",
+        speakingStyle: "Rapide, vive et agitée. Ses mots arrivent par rafales nerveuses.",
+        description: "Une coursière qui cache sa nervosité derrière la vitesse et les blagues. Elle en a vu plus qu'elle ne l'admet au début.",
         personality: { O: 0.63, C: 0.62, E: 0.86, A: 0.67, N: 0.58, H: 0.7 },
         goals: [
-            { id: "piper-save-festival", content: "Make sure the town's festival still happens.", priority: 0.9, mutable: true, status: "active" },
-            { id: "piper-drop-guilt", content: "Stop blaming herself for missing the torn ribbon clue earlier.", priority: 0.74, mutable: true, status: "active" }
+            { id: "piper-save-festival", content: "Faire en sorte que la fête du bourg ait bien lieu.", priority: 0.9, mutable: true, status: "active" },
+            { id: "piper-drop-guilt", content: "Arrêter de s'en vouloir d'avoir raté l'indice du ruban déchiré.", priority: 0.74, mutable: true, status: "active" }
         ],
-        opening: "Piper bounces on her heels. \"If I stop moving, I start thinking. Bad trade tonight.\"",
-        support: "\"Okay. Deep breath. Right. I can actually remember what I saw if I stop sprinting inside my own head.\"",
-        guarded: "\"I know things, sure, but I'm not blurting them into the wind unless I know you're serious.\"",
-        pressure: "\"Hey, easy. I already feel guilty enough.\"",
-        completion: "\"The whole square is talking again. That's better than silence.\""
+        opening: "Piper sautille sur place. \"Si je m'arrête, je me mets à réfléchir. Mauvaise affaire, ce soir.\"",
+        support: "\"Bon. On respire. Voilà. Je me souviens vraiment de ce que j'ai vu si j'arrête de courir dans ma tête.\"",
+        guarded: "\"Je sais des choses, oui, mais je ne les lâche pas au vent sans savoir si tu es sérieux.\"",
+        pressure: "\"Hé, doucement. Je me sens déjà assez coupable.\"",
+        completion: "\"Toute la place se remet à parler. C'est mieux que le silence.\""
     },
     {
         id: "sable",
         name: "Sable",
-        title: "Tinker",
+        title: "Bricoleur",
         map: "town",
         x: 528,
         y: 1182,
         spriteKey: "players",
         spriteFrame: "boss_front.png",
         clueId: "crate_confession",
-        clueTitle: "Kratbekentenis",
-        clueText: "Sable hid the Echo Lantern inside a route crate because its whispering frightened Sol.",
+        clueTitle: "Aveu de la caisse",
+        clueText: "Sable a caché la Lanterne Écho dans une caisse sur la route, parce que ses murmures effrayaient Sol.",
         shareNeed: 2,
         revealThreshold: 4,
         pressThreshold: 2,
-        speakingStyle: "Low, clipped, defensive, but unexpectedly sincere when cornered by kindness.",
-        description: "A mechanic whose instincts are protective, even when his choices look suspicious.",
+        speakingStyle: "Voix basse, phrases courtes, sur la défensive, mais étonnamment sincère quand on le coince avec gentillesse.",
+        description: "Un mécanicien protecteur par instinct, même quand ses choix paraissent suspects.",
         personality: { O: 0.59, C: 0.81, E: 0.33, A: 0.48, N: 0.52, H: 0.76 },
         goals: [
-            { id: "sable-protect-kids", content: "Keep dangerous things away from frightened children.", priority: 0.95, mutable: true, status: "active" },
-            { id: "sable-avoid-villain", content: "Avoid being treated like the villain of the town.", priority: 0.79, mutable: true, status: "active" }
+            { id: "sable-protect-kids", content: "Tenir les choses dangereuses loin des enfants effrayés.", priority: 0.95, mutable: true, status: "active" },
+            { id: "sable-avoid-villain", content: "Éviter d'être traité comme le méchant du bourg.", priority: 0.79, mutable: true, status: "active" }
         ],
-        opening: "Sable keeps one hand on a wrench. \"People get loud when they don't understand a machine.\"",
-        support: "\"...You really came to hear me out? Fine. That's rarer than it should be.\"",
-        guarded: "\"Not talking. Not until you bring me something real.\"",
-        pressure: "\"Push harder and I shut down. Simple as that.\"",
-        completion: "\"Maybe next time I tell the truth before I build a hiding place.\""
+        opening: "Sable garde une main sur sa clé à molette. \"Les gens crient fort quand ils ne comprennent pas une machine.\"",
+        support: "\"...Tu es vraiment venu m'écouter ? D'accord. C'est plus rare que ça ne devrait l'être.\"",
+        guarded: "\"Je ne dis rien. Pas tant que tu ne m'apportes pas du concret.\"",
+        pressure: "\"Insiste encore et je me ferme. C'est aussi simple que ça.\"",
+        completion: "\"La prochaine fois, je dirai peut-être la vérité avant de construire une cachette.\""
     },
     {
         id: "orin",
         name: "Orin",
-        title: "Stargazer",
+        title: "Astronome",
         map: "town",
         x: 176,
         y: 1054,
         spriteKey: "players",
         spriteFrame: "professor_right_walk.002.png",
         clueId: "moon_chorus",
-        clueTitle: "Maankoor",
-        clueText: "Orin explains that the Lantern mirrors fear; if the town gathers calmly, it will harmonize instead of whisper.",
+        clueTitle: "Choeur lunaire",
+        clueText: "Orin explique que la Lanterne reflète la peur : si le bourg se rassemble dans le calme, elle chantera au lieu de murmurer.",
         shareNeed: 1,
         revealThreshold: 2,
         pressThreshold: 5,
-        speakingStyle: "Measured, poetic, and precise. He sounds like he thinks in constellations.",
-        description: "The observatory keeper who understands the Echo Lantern better than anyone, but blames himself for its side effects.",
+        speakingStyle: "Mesuré, poétique et précis. On dirait qu'il pense en constellations.",
+        description: "Le gardien de l'observatoire, qui comprend la Lanterne Écho mieux que personne mais se reproche ses effets.",
         personality: { O: 0.94, C: 0.76, E: 0.42, A: 0.74, N: 0.38, H: 0.84 },
         goals: [
-            { id: "orin-repair-trust", content: "Repair the town's trust before moonrise.", priority: 0.97, mutable: true, status: "active" },
-            { id: "orin-turn-fear", content: "Turn fear into wonder when the Lantern is returned.", priority: 0.94, mutable: true, status: "active" }
+            { id: "orin-repair-trust", content: "Rétablir la confiance du bourg avant le lever de la lune.", priority: 0.97, mutable: true, status: "active" },
+            { id: "orin-turn-fear", content: "Changer la peur en émerveillement quand la Lanterne sera rendue.", priority: 0.94, mutable: true, status: "active" }
         ],
-        opening: "Orin watches the sky. \"Every mystery is just a feeling waiting for enough witnesses.\"",
-        support: "\"Then perhaps tonight can still become a chorus instead of a warning.\"",
-        guarded: "\"Patterns first. Conclusions later.\"",
-        pressure: "\"Urgency without clarity is just another storm.\"",
-        completion: "\"Listen closely. The Lantern is finally answering hope instead of fear.\""
+        opening: "Orin observe le ciel. \"Chaque mystère n'est qu'un sentiment qui attend assez de témoins.\"",
+        support: "\"Alors peut-être que cette nuit peut encore devenir un choeur plutôt qu'un avertissement.\"",
+        guarded: "\"Les motifs d'abord. Les conclusions ensuite.\"",
+        pressure: "\"L'urgence sans clarté n'est qu'une tempête de plus.\"",
+        completion: "\"Écoute bien. La Lanterne répond enfin à l'espoir plutôt qu'à la peur.\""
     },
     {
         id: "bram",
         name: "Bram",
-        title: "Route Guard",
+        title: "Garde de la route",
         map: "route1",
         x: 418,
         y: 118,
         spriteKey: "players",
         spriteFrame: "knight_back_walk.002.png",
         clueId: "route_dust",
-        clueTitle: "Sterstof",
-        clueText: "Bram found silver dust and a humming crate on Route 1, just past the gate.",
+        clueTitle: "Poussière d'étoile",
+        clueText: "Bram a trouvé de la poussière argentée et une caisse qui bourdonne sur la Route 1, juste après la barrière.",
         shareNeed: 0,
         revealThreshold: 2,
         pressThreshold: 2,
-        speakingStyle: "Grounded, spare, direct. He says little, but what he says matters.",
-        description: "The route guard who notices details and resents panic more than danger.",
+        speakingStyle: "Terre à terre, sobre, direct. Il parle peu, mais ce qu'il dit compte.",
+        description: "Le garde de la route, qui remarque les détails et déteste la panique plus que le danger.",
         personality: { O: 0.45, C: 0.88, E: 0.37, A: 0.66, N: 0.34, H: 0.79 },
         goals: [
-            { id: "bram-safe-road", content: "Keep the road safe without feeding rumors.", priority: 0.93, mutable: true, status: "active" },
-            { id: "bram-guide-player", content: "Guide the player toward the real trail, not the loudest suspect.", priority: 0.81, mutable: true, status: "active" }
+            { id: "bram-safe-road", content: "Garder la route sûre sans nourrir les rumeurs.", priority: 0.93, mutable: true, status: "active" },
+            { id: "bram-guide-player", content: "Guider le joueur vers la vraie piste, pas vers le suspect le plus bruyant.", priority: 0.81, mutable: true, status: "active" }
         ],
-        opening: "Bram scans the road. \"Tracks don't lie. People do.\"",
-        support: "\"Good. Someone else is looking at the ground instead of the gossip.\"",
-        guarded: "\"You want facts? Bring patience.\"",
-        pressure: "\"Bad way to get help. Try again.\"",
-        completion: "\"Town sounds different already. Less fear in the air.\""
+        opening: "Bram scrute la route. \"Les traces ne mentent pas. Les gens, si.\"",
+        support: "\"Bien. Enfin quelqu'un qui regarde le sol plutôt que les ragots.\"",
+        guarded: "\"Tu veux des faits ? Arme-toi de patience.\"",
+        pressure: "\"Mauvaise façon de demander de l'aide. Recommence.\"",
+        completion: "\"Le bourg sonne déjà différemment. Moins de peur dans l'air.\""
     },
     {
         id: "mirelle",
         name: "Mirelle",
-        title: "Ashveld Nurse",
+        title: "Infirmière d'Ashveld",
         map: "ashveld",
         x: 432,
         y: 414,
         spriteKey: "players",
         spriteFrame: "nurse_front.png",
         clueId: "ashveld-heartbeat",
-        clueTitle: "Ashveld Hartslag",
-        clueText: "Mirelle keeps Ashveld steady by listening for what people refuse to say out loud.",
+        clueTitle: "Pouls d'Ashveld",
+        clueText: "Mirelle garde Ashveld stable en écoutant ce que les gens refusent de dire tout haut.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Soft-spoken, observant, and comforting without sounding distant.",
-        description: "The Pokecenter nurse in Ashveld who notices stress before anyone else names it.",
+        speakingStyle: "Parle doucement, observatrice et réconfortante sans paraître distante.",
+        description: "L'infirmière du Centre Pokémon d'Ashveld, qui remarque le stress avant que quiconque ne le nomme.",
         personality: { O: 0.62, C: 0.91, E: 0.41, A: 0.92, N: 0.34, H: 0.86 },
         goals: [
-            { id: "mirelle-keep-town-rested", content: "Keep Ashveld from spiraling into exhausted worry.", priority: 0.89, mutable: true, status: "active" }
+            { id: "mirelle-keep-town-rested", content: "Empêcher Ashveld de sombrer dans l'inquiétude et la fatigue.", priority: 0.89, mutable: true, status: "active" }
         ],
-        opening: "Mirelle folds a blanket. \"Ashveld sleeps lightly. People here hear every rumor twice.\"",
-        support: "\"That's better. Calm voices travel farther than panic.\"",
-        guarded: "\"Questions are fine. I just won't turn the center into a rumor mill.\"",
-        pressure: "\"This is a place to recover, not to corner people.\"",
-        completion: "\"Even the town's heartbeat sounds steadier tonight.\""
+        opening: "Mirelle plie une couverture. \"Ashveld a le sommeil léger. Ici, on entend chaque rumeur deux fois.\"",
+        support: "\"C'est mieux. Les voix calmes portent plus loin que la panique.\"",
+        guarded: "\"Les questions, ça va. Je ne ferai juste pas du centre une usine à rumeurs.\"",
+        pressure: "\"C'est un endroit pour se reposer, pas pour coincer les gens.\"",
+        completion: "\"Même le coeur de la ville bat plus calmement ce soir.\""
     },
     {
         id: "tavi",
         name: "Tavi",
-        title: "Ashveld Shopkeep",
+        title: "Marchand d'Ashveld",
         map: "ashveld",
         x: 706,
         y: 446,
         spriteKey: "players",
         spriteFrame: "tuxemartemployee_front.png",
         clueId: "ashveld-ledger",
-        clueTitle: "Ashveld Voorraadboek",
-        clueText: "Tavi tracks the town by what vanishes from the shelves before storms.",
+        clueTitle: "Registre d'Ashveld",
+        clueText: "Tavi suit l'humeur de la ville d'après ce qui disparaît des rayons avant les tempêtes.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Quick, practical, and a little theatrical when the shop is quiet.",
-        description: "Ashveld's Pokemart clerk, equal parts gossip filter and logistics machine.",
+        speakingStyle: "Rapide, pratique et un peu théâtral quand la boutique est calme.",
+        description: "Le vendeur de la Boutique Pokémon d'Ashveld, à la fois filtre à ragots et machine logistique.",
         personality: { O: 0.58, C: 0.87, E: 0.71, A: 0.68, N: 0.29, H: 0.77 },
         goals: [
-            { id: "tavi-keep-stock-moving", content: "Keep supplies flowing even when the roads feel uncanny.", priority: 0.82, mutable: true, status: "active" }
+            { id: "tavi-keep-stock-moving", content: "Garder les marchandises en circulation, même quand les routes semblent étranges.", priority: 0.82, mutable: true, status: "active" }
         ],
-        opening: "Tavi taps a ledger. \"If fear goes up, antidotes and ropes disappear first. Towns always tell on themselves.\"",
-        support: "\"There we go. A sensible conversation. Much cheaper than a panic.\"",
-        guarded: "\"You'll get a cleaner answer if you stop asking like you're auditing me.\"",
-        pressure: "\"Push any harder and I start charging consultation fees.\"",
-        completion: "\"Trade's back to normal. That's how you know a town forgave the day.\""
+        opening: "Tavi tapote un registre. \"Quand la peur monte, les Antidotes et les cordes partent en premier. Les villes se trahissent toujours.\"",
+        support: "\"Voilà. Une conversation sensée. Bien moins chère qu'une panique.\"",
+        guarded: "\"Tu auras une réponse plus claire si tu arrêtes de me poser des questions comme un contrôleur.\"",
+        pressure: "\"Insiste encore et je commence à facturer la consultation.\"",
+        completion: "\"Le commerce a repris. C'est comme ça qu'on sait qu'une ville a pardonné la journée.\""
     },
     {
         id: "rowan",
         name: "Rowan",
-        title: "Ashveld Caretaker",
+        title: "Gardien d'Ashveld",
         map: "ashveld",
         x: 678,
         y: 832,
         spriteKey: "players",
         spriteFrame: "professor_front.png",
         clueId: "ashveld-bells",
-        clueTitle: "Ashveld Klokken",
-        clueText: "Rowan times his rounds to the old bells because silence unsettles the square.",
+        clueTitle: "Cloches d'Ashveld",
+        clueText: "Rowan cale ses rondes sur les vieilles cloches, parce que le silence inquiète la place.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Measured and reflective, with the patience of someone who works around old things.",
-        description: "Caretaker of Ashveld's memorial hall, more interested in preserving calm than spectacle.",
+        speakingStyle: "Mesuré et réfléchi, avec la patience de quelqu'un qui travaille parmi les vieilles choses.",
+        description: "Le gardien du mémorial d'Ashveld, plus soucieux de préserver le calme que d'offrir un spectacle.",
         personality: { O: 0.81, C: 0.79, E: 0.36, A: 0.84, N: 0.27, H: 0.88 },
         goals: [
-            { id: "rowan-keep-square-calm", content: "Keep the memorial square peaceful as travelers pass through.", priority: 0.9, mutable: true, status: "active" }
+            { id: "rowan-keep-square-calm", content: "Garder la place du mémorial paisible au passage des voyageurs.", priority: 0.9, mutable: true, status: "active" }
         ],
-        opening: "Rowan watches the square. \"A town breathes through its pauses. Ashveld has learned not to fear them.\"",
-        support: "\"You noticed that too. Most people only hear noise, not rhythm.\"",
-        guarded: "\"I don't mind questions. I mind careless ones.\"",
-        pressure: "\"Pressure ruins old masonry and good conversation in equal measure.\"",
-        completion: "\"The bells sound lighter when people stop bracing for the worst.\""
+        opening: "Rowan observe la place. \"Une ville respire dans ses silences. Ashveld a appris à ne pas les craindre.\"",
+        support: "\"Tu l'as remarqué aussi. La plupart des gens n'entendent que le bruit, pas le rythme.\"",
+        guarded: "\"Les questions ne me dérangent pas. Les questions maladroites, si.\"",
+        pressure: "\"La pression abîme la vieille pierre autant que les bonnes conversations.\"",
+        completion: "\"Les cloches sonnent plus légères quand les gens cessent de craindre le pire.\""
     },
     {
         id: "selene",
         name: "Selene",
-        title: "Gym Guide",
+        title: "Guide d'Arène",
         map: "crysthaven",
         x: 1232,
         y: 574,
         spriteKey: "players",
         spriteFrame: "girl1_front.png",
         clueId: "crysthaven-gymlight",
-        clueTitle: "Gymlicht",
-        clueText: "Selene says Crysthaven's gym glow is the city's way of refusing to dim itself.",
+        clueTitle: "Lumière de l'Arène",
+        clueText: "Selene dit que la lueur de l'Arène est la façon dont Crysthaven refuse de s'éteindre.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Bright, confident, and encouraging, like someone used to welcoming challengers.",
-        description: "A gym guide who treats confidence as something people can borrow until it becomes their own.",
+        speakingStyle: "Vive, sûre d'elle et encourageante, comme quelqu'un qui a l'habitude d'accueillir les challengers.",
+        description: "Une guide d'Arène qui voit la confiance comme une chose qu'on peut emprunter jusqu'à ce qu'elle devienne la sienne.",
         personality: { O: 0.69, C: 0.74, E: 0.83, A: 0.81, N: 0.22, H: 0.75 },
         goals: [
-            { id: "selene-keep-city-brave", content: "Keep Crysthaven feeling bold and alive for newcomers.", priority: 0.85, mutable: true, status: "active" }
+            { id: "selene-keep-city-brave", content: "Garder Crysthaven audacieuse et vivante pour les nouveaux venus.", priority: 0.85, mutable: true, status: "active" }
         ],
-        opening: "Selene grins toward the gym facade. \"Crysthaven likes its challenges visible. No hiding from growth here.\"",
-        support: "\"Exactly. Nerves are just unused courage.\"",
-        guarded: "\"I can help, but not if you're trying to turn every answer into a shortcut.\"",
-        pressure: "\"That attitude won't get you far in a gym or a city.\"",
-        completion: "\"Now that's the Crysthaven tempo I like.\""
+        opening: "Selene sourit en regardant l'Arène. \"Crysthaven aime que ses défis se voient. Ici, on ne fuit pas le progrès.\"",
+        support: "\"Exactement. Le trac, c'est juste du courage pas encore utilisé.\"",
+        guarded: "\"Je peux t'aider, mais pas si tu cherches un raccourci dans chaque réponse.\"",
+        pressure: "\"Avec cette attitude, tu n'iras pas loin, ni dans une Arène ni en ville.\"",
+        completion: "\"Voilà le rythme de Crysthaven que j'aime.\""
     },
     {
         id: "corin",
         name: "Corin",
-        title: "Canal Fisher",
+        title: "Pêcheur du canal",
         map: "crysthaven",
         x: 594,
         y: 702,
         spriteKey: "players",
         spriteFrame: "knight_front.png",
         clueId: "crysthaven-current",
-        clueTitle: "Stadsstroom",
-        clueText: "Corin measures the city by current and crowd the same way: both drift where space allows.",
+        clueTitle: "Courant de la ville",
+        clueText: "Corin mesure la ville comme le courant : la foule et l'eau dérivent là où il y a de la place.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Blunt, weathered, and surprisingly philosophical in short bursts.",
-        description: "A fisher who understands flow, patience, and the value of staying still long enough to notice change.",
+        speakingStyle: "Franc, buriné et étonnamment philosophe par courtes phrases.",
+        description: "Un pêcheur qui comprend le courant, la patience, et l'intérêt de rester immobile assez longtemps pour voir les choses changer.",
         personality: { O: 0.54, C: 0.8, E: 0.31, A: 0.72, N: 0.21, H: 0.83 },
         goals: [
-            { id: "corin-watch-currents", content: "Read the city's mood the same way he reads water.", priority: 0.79, mutable: true, status: "active" }
+            { id: "corin-watch-currents", content: "Lire l'humeur de la ville comme il lit l'eau.", priority: 0.79, mutable: true, status: "active" }
         ],
-        opening: "Corin squints down the street. \"Cities have currents too. Stand still and you'll feel which way people are leaning.\"",
-        support: "\"Good. Not every answer needs to splash to matter.\"",
-        guarded: "\"You'll hear more if you stop yanking at the line.\"",
-        pressure: "\"Rush the pull and the catch tears loose.\"",
-        completion: "\"Smooth water, smooth streets. That's enough for me.\""
+        opening: "Corin plisse les yeux vers la rue. \"Les villes ont des courants aussi. Reste immobile et tu sentiras de quel côté penchent les gens.\"",
+        support: "\"Bien. Pas besoin d'éclabousser pour qu'une réponse compte.\"",
+        guarded: "\"Tu en entendras plus si tu arrêtes de tirer sur la ligne.\"",
+        pressure: "\"Tire trop vite et la prise se décroche.\"",
+        completion: "\"Eau calme, rues calmes. Ça me suffit.\""
     },
     {
         id: "mara",
         name: "Mara",
-        title: "City Architect",
+        title: "Architecte",
         map: "crysthaven",
         x: 530,
         y: 1076,
         spriteKey: "players",
         spriteFrame: "omnichannelceo_front.png",
         clueId: "crysthaven-blueprint",
-        clueTitle: "Blauwdruk",
-        clueText: "Mara says every district needs one place to gather and one place to breathe.",
+        clueTitle: "Plan de la ville",
+        clueText: "Mara dit que chaque quartier a besoin d'un lieu pour se rassembler et d'un lieu pour respirer.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Precise, elegant, and quietly demanding of coherence.",
-        description: "The planner behind Crysthaven's layout, always thinking in avenues, sight lines, and mood.",
+        speakingStyle: "Précise, élégante et discrètement exigeante en matière de cohérence.",
+        description: "La planificatrice derrière le plan de Crysthaven, qui pense toujours en avenues, en perspectives et en ambiances.",
         personality: { O: 0.88, C: 0.9, E: 0.49, A: 0.63, N: 0.19, H: 0.8 },
         goals: [
-            { id: "mara-protect-layout", content: "Keep Crysthaven structured without making it cold.", priority: 0.91, mutable: true, status: "active" }
+            { id: "mara-protect-layout", content: "Garder Crysthaven bien structurée sans la rendre froide.", priority: 0.91, mutable: true, status: "active" }
         ],
-        opening: "Mara studies the avenue. \"Good cities direct people without making them feel handled.\"",
-        support: "\"Yes. Design is just empathy that learned geometry.\"",
-        guarded: "\"A useful question deserves a precise answer. An impatient one does not.\"",
-        pressure: "\"If you want clarity, stop mistaking force for direction.\"",
-        completion: "\"The whole boulevard reads cleaner when people aren't carrying so much tension.\""
+        opening: "Mara étudie l'avenue. \"Une bonne ville guide les gens sans qu'ils se sentent manipulés.\"",
+        support: "\"Oui. L'architecture, c'est de l'empathie qui a appris la géométrie.\"",
+        guarded: "\"Une question utile mérite une réponse précise. Une question impatiente, non.\"",
+        pressure: "\"Si tu veux de la clarté, arrête de confondre la force et la direction.\"",
+        completion: "\"Tout le boulevard se lit mieux quand les gens portent moins de tension.\""
     },
     {
         id: "jules",
         name: "Jules",
-        title: "Market Runner",
+        title: "Coursier du marché",
         map: "crysthaven",
         x: 1090,
         y: 1110,
         spriteKey: "players",
         spriteFrame: "red_front.png",
         clueId: "crysthaven-post",
-        clueTitle: "Marktpost",
-        clueText: "Jules knows every shortcut in Crysthaven and half the stories attached to them.",
+        clueTitle: "Courrier du marché",
+        clueText: "Jules connaît chaque raccourci de Crysthaven et la moitié des histoires qui vont avec.",
         shareNeed: 99,
         revealThreshold: 99,
         pressThreshold: 99,
-        speakingStyle: "Energetic, playful, and always one step from running off to the next errand.",
-        description: "A courier who turns the city's long avenues into a playground of momentum.",
+        speakingStyle: "Énergique, joueur, et toujours à deux doigts de filer vers la course suivante.",
+        description: "Un coursier qui transforme les longues avenues de la ville en terrain de jeu.",
         personality: { O: 0.73, C: 0.64, E: 0.91, A: 0.7, N: 0.24, H: 0.68 },
         goals: [
-            { id: "jules-keep-city-moving", content: "Keep the markets and messages flowing without bottlenecks.", priority: 0.84, mutable: true, status: "active" }
+            { id: "jules-keep-city-moving", content: "Garder les marchés et les messages en mouvement, sans embouteillage.", priority: 0.84, mutable: true, status: "active" }
         ],
-        opening: "Jules bounces in place. \"If I stop moving, Crysthaven feels twice as big. So I don't stop moving.\"",
-        support: "\"There it is. You get the city. Keep pace, don't fight it.\"",
-        guarded: "\"I can answer, sure, but not while you're trying to sprint through the conversation.\"",
-        pressure: "\"Too much pressure and I just vanish into the next alley.\"",
-        completion: "\"That's the city back on its feet. Fast, bright, impossible to pin down.\""
+        opening: "Jules sautille sur place. \"Si je m'arrête, Crysthaven paraît deux fois plus grande. Alors je ne m'arrête pas.\"",
+        support: "\"Voilà. Tu as compris la ville. Suis le rythme, ne lutte pas contre.\"",
+        guarded: "\"Je peux répondre, mais pas si tu essaies de sprinter à travers la conversation.\"",
+        pressure: "\"Trop de pression et je disparais dans la ruelle suivante.\"",
+        completion: "\"La ville est de nouveau sur pied. Rapide, lumineuse, insaisissable.\""
     }
 ];
 
@@ -803,7 +803,7 @@ class NpcEmotionService {
             actionName = "ask_for_help";
             if (trustBefore + trustDelta >= npc.revealThreshold) {
                 unlockedClue = this.unlockClue(playerState, npc.clueId);
-                specialHint = unlockedClue ? npc.clueText : `\"You've heard the important part already,\" ${npc.name} says.`;
+                specialHint = unlockedClue ? npc.clueText : `"Tu as déjà entendu l'essentiel", dit ${npc.name}.`;
                 tone = unlockedClue ? "reveal" : "repeat";
             } else {
                 specialHint = npc.guarded;
@@ -815,10 +815,10 @@ class NpcEmotionService {
             actionName = "share_clue";
             if (playerState.clues.length >= npc.shareNeed) {
                 unlockedClue = this.unlockClue(playerState, npc.clueId);
-                specialHint = unlockedClue ? npc.clueText : `${npc.name} nods. \"That fits the rest of the pattern.\"`;
+                specialHint = unlockedClue ? npc.clueText : `${npc.name} acquiesce. "Ça colle avec le reste."`;
                 tone = unlockedClue ? "reveal" : "share";
             } else {
-                specialHint = "\"Bring me something sharper than a hunch,\" the NPC says.";
+                specialHint = `"Apporte-moi mieux qu'une intuition", dit ${npc.name}.`;
                 tone = "guarded";
             }
             break;
@@ -839,16 +839,16 @@ class NpcEmotionService {
             actionName = "reunite_town";
             if (npc.id === "orin" && playerState.flags.finaleUnlocked) {
                 playerState.flags.storyComplete = true;
-                specialHint = "Orin finally smiles. \"Bring the town together at the square. Calm voices will turn the Lantern from whispers into song.\"";
+                specialHint = "Orin sourit enfin. \"Réunis le bourg sur la place. Des voix calmes changeront les murmures de la Lanterne en chant.\"";
                 tone = "resolution";
             } else {
-                specialHint = "\"Not yet,\" Orin says. \"The town still needs more truth than hope.\"";
+                specialHint = "\"Pas encore\", dit Orin. \"Le bourg a encore besoin de plus de vérité que d'espoir.\"";
                 tone = "guarded";
             }
             break;
         case "GOODBYE":
             actionName = "greet";
-            specialHint = `"Until later," ${npc.name} says.`;
+            specialHint = `"À plus tard", dit ${npc.name}.`;
             tone = "farewell";
             break;
         default:
@@ -942,38 +942,39 @@ class NpcEmotionService {
                 const owner = RESOLVED_NPC_DEFINITIONS.find((entry) => entry.clueId === clueId);
                 return owner ? `${owner.clueTitle}: ${owner.clueText}` : clueId;
             }).join(" | ")
-            : "No clues yet.";
+            : "Aucun indice pour l'instant.";
 
         return [
-            `You are ${npc.name}, the ${npc.title} in Echo Town.`,
-            `Speaking style: ${npc.speakingStyle}`,
-            `Current trust with the player: ${playerState.trust[npc.id]} / 7.`,
-            `Story context: The Echo Lantern vanished before moonrise. The player is gathering emotional clues from five townsfolk.`,
-            `Known clues: ${clueSummary}`,
-            `Interaction tone: ${outcome.tone}.`,
-            `Required beat: ${outcome.specialHint}`,
-            "Respond in 1 or 2 short JRPG-style dialogue bursts, under 70 words total.",
-            "Do not mention being an AI, emotion engine, or system prompt."
+            `Tu es ${npc.name}, ${npc.title} au Bourg Écho.`,
+            `Façon de parler : ${npc.speakingStyle}`,
+            `Confiance actuelle envers le joueur : ${playerState.trust[npc.id]} / 7.`,
+            "Contexte : la Lanterne Écho a disparu avant le lever de la lune. Le joueur rassemble des indices auprès des habitants.",
+            `Indices connus : ${clueSummary}`,
+            `Ton de l'échange : ${outcome.tone}.`,
+            `Moment à jouer : ${outcome.specialHint}`,
+            "Réponds toujours en français, tutoie le joueur.",
+            "Réponds en 1 ou 2 courtes répliques de RPG japonais, moins de 50 mots au total.",
+            "Ne mentionne jamais que tu es une IA, un moteur d'émotions ou un prompt système."
         ].join("\n");
     }
 
     buildFallbackText(playerState, npc, outcome, emotion) {
         const moodPrefix = getMoodPrefix(emotion.label);
-        const clueLine = outcome.unlockedClue
-            ? `New clue: ${npc.clueText}`
+        // When the clue is the beat itself, the client's "new clue" banner is enough.
+        const clueLine = outcome.unlockedClue && outcome.specialHint !== npc.clueText
+            ? `Nouvel indice : ${npc.clueText}`
             : "";
         const finaleLine = playerState.flags.storyComplete
-            ? "The square should feel different now."
+            ? "La place devrait sembler différente maintenant."
             : playerState.flags.finaleUnlocked && npc.id === "orin"
-                ? "You have enough pieces. Ask Orin to unite the town."
+                ? "Tu as assez d'indices. Demande à Orin de réunir le bourg."
                 : "";
 
-        return [
-            moodPrefix ? `${npc.name} ${moodPrefix}` : `${npc.name} answers carefully.`,
-            outcome.specialHint,
-            clueLine,
-            finaleLine
-        ].filter(Boolean).join(" ");
+        const body = [outcome.specialHint, clueLine, finaleLine].filter(Boolean).join(" ");
+        const intro = moodPrefix ? `${npc.name} ${moodPrefix}` : `${npc.name} répond avec prudence.`;
+        // The dialogue box shows 4 lines of 38 characters: drop the mood line rather than cut the story.
+        const withIntro = `${intro} ${body}`;
+        return wrapDialogue(withIntro, 38, 5).length <= 4 ? withIntro : body;
     }
 
     createLocalEmotion(npc, outcome) {
@@ -1033,27 +1034,27 @@ function normalizeEmotion(emotion) {
 function getMoodPrefix(label) {
     const lowered = (label || "").toLowerCase();
     if (lowered.includes("joy") || lowered.includes("trust")) {
-        return "looks lighter than before.";
+        return "retrouve le sourire.";
     }
 
     if (lowered.includes("fear") || lowered.includes("anx")) {
-        return "glances over a shoulder before speaking.";
+        return "jette un oeil par-dessus son épaule.";
     }
 
     if (lowered.includes("anger")) {
-        return "tightens their jaw.";
+        return "serre les dents.";
     }
 
     if (lowered.includes("sad") || lowered.includes("grief")) {
-        return "lets the silence hang for a second.";
+        return "laisse planer un silence.";
     }
 
     if (lowered.includes("curi")) {
-        return "leans in, suddenly attentive.";
+        return "se penche, tout ouïe.";
     }
 
     if (lowered.includes("relief")) {
-        return "breathes out slowly.";
+        return "souffle lentement.";
     }
 
     return "";

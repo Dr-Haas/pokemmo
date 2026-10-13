@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { healParty, isPartyFullyHealed, updatePokemonCenterState } from "./state/gameState";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
+const JOY_NAME = "Infirmière Joëlle";
 const TILE_SIZE = 32;
 const CENTER_INTERIORS = {
     pokemon_center_town: {
@@ -210,7 +211,7 @@ export default class PokemonCenterManager {
     }
 
     createPrompt() {
-        this.prompt = this.scene.add.text(0, 0, "Z PRAAT", {
+        this.prompt = this.scene.add.text(0, 0, "A  PARLER", {
             fontFamily: FONT_FAMILY,
             fontSize: "8px",
             color: "#ffffff",
@@ -302,59 +303,59 @@ export default class PokemonCenterManager {
         });
 
         if (isPartyFullyHealed()) {
-            this.showTextSequence("Zuster Joy", [
-                "Welkom bij het",
-                "Pokémon Center!"
+            this.showTextSequence(JOY_NAME, [
+                "Bienvenue au",
+                "Centre Pokémon !"
             ], () => {
-                this.showTextSequence("Zuster Joy", [
-                    "Je Pokémons zien",
-                    "er al prima uit!"
+                this.showTextSequence(JOY_NAME, [
+                    "Tes Pokémon ont",
+                    "l'air en pleine forme !"
                 ], () => {
-                    this.showTextSequence("Zuster Joy", [
-                        "Kom gerust terug",
-                        "als je hulp nodig",
-                        "hebt."
+                    this.showTextSequence(JOY_NAME, [
+                        "Reviens quand tu veux",
+                        "si tu as besoin",
+                        "d'aide."
                     ]);
                 });
             });
             return;
         }
 
-        this.showTextSequence("Zuster Joy", [
-            "Welkom bij het",
-            "Pokémon Center!",
-            "We herstellen je",
-            "Pokémons volledig."
+        this.showTextSequence(JOY_NAME, [
+            "Bienvenue au",
+            "Centre Pokémon !",
+            "Nous soignons tes",
+            "Pokémon entièrement."
         ], () => {
-            this.showChoice("Zuster Joy", [
-                "Wil je dat ik je",
-                "Pokémons herstel?"
+            this.showChoice(JOY_NAME, [
+                "Veux-tu que je",
+                "soigne tes Pokémon ?"
             ], [
                 {
-                    label: "Ja!",
+                    label: "Oui !",
                     onSelect: async () => {
-                        this.showTextSequence("Zuster Joy", [
-                            "Oké! We zullen ze",
-                            "goed verzorgen..."
+                        this.showTextSequence(JOY_NAME, [
+                            "D'accord ! Je vais",
+                            "bien m'en occuper..."
                         ], async () => {
                             await this.playHealingAnimation();
                             healParty();
-                            this.showTextSequence("Zuster Joy", [
-                                "Je Pokémons zijn",
-                                "volledig hersteld!",
-                                "Veel succes op",
-                                "je reis!"
+                            this.showTextSequence(JOY_NAME, [
+                                "Tes Pokémon sont",
+                                "en pleine forme !",
+                                "Bonne chance pour",
+                                "ton aventure !"
                             ]);
                         });
                     }
                 },
                 {
-                    label: "Nee",
+                    label: "Non",
                     onSelect: () => {
-                        this.showTextSequence("Zuster Joy", [
-                            "Oké! Kom gerust",
-                            "terug als je hulp",
-                            "nodig hebt."
+                        this.showTextSequence(JOY_NAME, [
+                            "D'accord ! Reviens",
+                            "quand tu veux si tu",
+                            "as besoin d'aide."
                         ]);
                     }
                 }
@@ -363,8 +364,8 @@ export default class PokemonCenterManager {
     }
 
     startPcConversation() {
-        this.showChoice("Landon's PC", [
-            "Wat wil je doen?"
+        this.showChoice("PC", [
+            "Que veux-tu faire ?"
         ], [
             {
                 label: "Pokémon",
@@ -374,11 +375,10 @@ export default class PokemonCenterManager {
                 }
             },
             {
-                label: "Log uit",
+                label: "Déconnexion",
                 onSelect: () => {
-                    this.showTextSequence("Landon's PC", [
-                        "De PC wordt",
-                        "afgesloten."
+                    this.showTextSequence("PC", [
+                        "Le PC s'éteint."
                     ]);
                 }
             }

@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { emotionLabel } from "../i18n";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const COLORS = {
@@ -75,7 +76,7 @@ export default class FireRedDialogueUI {
 
         this.choiceContainer = this.scene.add.container(596, 202);
         this.choiceContainer.add(this.createPanel(184, 226));
-        this.choiceContainer.add(this.createText(16, 12, "KEUZES", 10));
+        this.choiceContainer.add(this.createText(16, 12, "CHOIX", 10));
         this.choiceContainer.add(this.createDivider(160, 32, 12));
 
         this.choiceCursor = this.createText(14, 48, "►", 10, COLORS.cursor);
@@ -138,11 +139,11 @@ export default class FireRedDialogueUI {
         this.root.setVisible(true);
         this.npcName.setText(npc.name);
         this.emotionLabel.setText("");
-        this.storyCounter.setText("MYSTERIE 0 CLUES");
+        this.storyCounter.setText("MYSTÈRE : 0 INDICE");
         this.dialogueLines[0].setText("...");
         this.dialogueLines[1].setText("");
-        this.dialogueLines[2].setText("De emotie van het moment");
-        this.dialogueLines[3].setText("wordt ingelezen.");
+        this.dialogueLines[2].setText("Lecture de l'émotion");
+        this.dialogueLines[3].setText("du moment...");
         this.choiceLabels.forEach((label) => label.setText(""));
         this.choiceCursor.setVisible(false);
         this.clueBanner.setText("");
@@ -156,8 +157,9 @@ export default class FireRedDialogueUI {
         this.selectedChoiceIndex = 0;
 
         this.npcName.setText(`${payload.npc.name}  ${payload.npc.title.toUpperCase()}`);
-        this.emotionLabel.setText((payload.response.emotion?.label || "neutral").toUpperCase());
-        this.storyCounter.setText(`MYSTERIE ${payload.story.clueCount} CLUES`);
+        this.emotionLabel.setText(emotionLabel(payload.response.emotion?.label));
+        const clueCount = payload.story.clueCount;
+        this.storyCounter.setText(`MYSTÈRE : ${clueCount} INDICE${clueCount > 1 ? "S" : ""}`);
 
         this.dialogueLines.forEach((line, index) => {
             line.setText(payload.response.lines[index] || "");
@@ -169,7 +171,7 @@ export default class FireRedDialogueUI {
             label.setColor(index === this.selectedChoiceIndex ? COLORS.accent : COLORS.text);
         });
 
-        this.clueBanner.setText(payload.response.unlockedClue ? `NIEUWE CLUE: ${payload.response.unlockedClue.title}` : "");
+        this.clueBanner.setText(payload.response.unlockedClue ? `NOUVEL INDICE : ${payload.response.unlockedClue.title}` : "");
         this.refreshCursor();
     }
 

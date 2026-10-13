@@ -13,26 +13,43 @@ import {
     updateOption,
     useBagItem
 } from "../state/gameState";
+import { bagCategoryLabel, mapLabel, moveCategoryLabel, natureLabel, statusLabel, typeLabel, typesLabel } from "../i18n";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const MENU_OPTIONS = [
     { id: "pokedex", label: "Pokédex" },
     { id: "pokemon", label: "Pokémon" },
-    { id: "bag", label: "Bag" },
-    { id: "save", label: "Save" },
-    { id: "option", label: "Option" },
-    { id: "exit", label: "Exit" }
+    { id: "bag", label: "Sac" },
+    { id: "save", label: "Sauver" },
+    { id: "option", label: "Options" },
+    { id: "exit", label: "Quitter" }
 ];
 const PARTY_ACTIONS = ["Summary", "Switch", "Item", "Cancel"];
-const SUMMARY_TABS = ["INFO", "STATS", "MOVES", "MEMO"];
+const PARTY_ACTION_LABELS = { Summary: "Résumé", Switch: "Ordre", Item: "Objet", Cancel: "Retour" };
+const SUMMARY_TABS = ["INFOS", "STATS", "CAPACITÉS", "MÉMO"];
+const OPTION_VALUE_LABELS = {
+    slow: "LENTE", mid: "MOYENNE", fast: "RAPIDE",
+    shift: "CHOIX", set: "DÉFINI",
+    mono: "MONO", stereo: "STÉRÉO",
+    normal: "NORMAL", LR: "LR", LA: "L=A",
+    fr: "FR", en: "EN", de: "DE"
+};
 const OPTION_FIELDS = [
-    { key: "textSpeed", label: "Text speed", values: ["slow", "mid", "fast"] },
-    { key: "battleScene", label: "Battle scene", values: [true, false], format: (value) => (value ? "On" : "Off") },
-    { key: "battleStyle", label: "Battle style", values: ["shift", "set"] },
-    { key: "sound", label: "Sound", values: ["mono", "stereo"] },
-    { key: "buttonMode", label: "Button mode", values: ["normal", "LR", "LA"] },
-    { key: "pokedexLanguage", label: "Dex language", values: ["en", "de"], format: (value) => value === "de" ? "DE" : "EN" }
+    { key: "textSpeed", label: "Vitesse texte", values: ["slow", "mid", "fast"] },
+    { key: "battleScene", label: "Animation combat", values: [true, false], format: (value) => (value ? "OUI" : "NON") },
+    { key: "battleStyle", label: "Style combat", values: ["shift", "set"] },
+    { key: "sound", label: "Son", values: ["mono", "stereo"] },
+    { key: "buttonMode", label: "Touches", values: ["normal", "LR", "LA"] },
+    { key: "pokedexLanguage", label: "Langue Pokédex", values: ["fr", "en", "de"] }
 ];
+const ITEM_EFFECT_LABELS = {
+    heal_hp: "Soin PV",
+    heal_status: "Soin statut",
+    revive: "Rappel",
+    capture: "Capture",
+    tm: "Capacité",
+    key: "Objet rare"
+};
 
 const COLORS = {
     startBackground: 0xf0ead8,
@@ -248,21 +265,21 @@ export default class FireRedMenuUI {
     createPartyScreen() {
         this.partyContainer = this.scene.add.container(32, 18).setVisible(false);
         this.partyContainer.add(this.createPanelGraphics(736, 406, COLORS.panelBlue));
-        this.partyContainer.add(this.createText(18, 14, "POKEMON", 10, COLORS.textOnBlue));
-        this.partyContainer.add(this.createText(18, 380, "X / ESC TERUG", 8, COLORS.textOnBlue));
+        this.partyContainer.add(this.createText(18, 14, "POKéMON", 10, COLORS.textOnBlue));
+        this.partyContainer.add(this.createText(18, 380, "X / ÉCHAP : RETOUR", 8, COLORS.textOnBlue));
         this.partyEntries = Array.from({ length: 6 }, (_, index) => this.createPartyEntry(18, 42 + (index * 54)));
         this.partyEntries.forEach((entry) => this.partyContainer.add(entry.container));
 
         this.partyActionPanel = this.scene.add.container(542, 126).setVisible(false);
         this.partyActionPanel.add(this.createPanelGraphics(170, 128, COLORS.panelBackground));
         this.partyActionCursor = this.createText(12, 16, "►", 8, COLORS.cursor);
-        this.partyActionLabels = PARTY_ACTIONS.map((label, index) => this.createText(30, 16 + (index * 24), label, 8));
+        this.partyActionLabels = PARTY_ACTIONS.map((action, index) => this.createText(30, 16 + (index * 24), PARTY_ACTION_LABELS[action], 8));
         this.partyActionPanel.add([this.partyActionCursor, ...this.partyActionLabels]);
         this.partyContainer.add(this.partyActionPanel);
 
         this.itemPanel = this.scene.add.container(470, 58).setVisible(false);
         this.itemPanel.add(this.createPanelGraphics(242, 286, COLORS.panelBackground));
-        this.itemTitle = this.createText(14, 14, "ITEM", 8);
+        this.itemTitle = this.createText(14, 14, "OBJET", 8);
         this.itemCursor = this.createText(14, 42, "►", 8, COLORS.cursor);
         this.itemLabels = Array.from({ length: 8 }, (_, index) => this.createText(34, 42 + (index * 26), "", 8));
         this.itemPanel.add([this.itemTitle, this.itemCursor, ...this.itemLabels]);
@@ -312,10 +329,13 @@ export default class FireRedMenuUI {
         this.summaryMovePanel = this.scene.add.container(382, 64);
         this.summaryMovePanel.add(this.createPanelGraphics(270, 216, COLORS.panelBlueDark));
         this.summaryMoveDetail = Array.from({ length: 5 }, (_, index) => this.createText(14, 18 + (index * 34), "", 8, COLORS.textOnBlue));
+        // Descriptions (French texts from PokeAPI) wrap inside their panel.
+        this.summaryMoveDetail[4].setWordWrapWidth(242).setLineSpacing(4);
         this.summaryMovePanel.add(this.summaryMoveDetail);
 
         this.summaryMemoLines = Array.from({ length: 6 }, (_, index) => this.createText(54, 68 + (index * 40), "", 8));
-        this.summaryFooter = this.createText(136, 356, "LEFT/RIGHT BLADEREN  X TERUG", 8);
+        this.summaryMemoLines[5].setWordWrapWidth(600).setLineSpacing(4);
+        this.summaryFooter = this.createText(136, 356, "GAUCHE/DROITE : PAGE  X : RETOUR", 8);
 
         this.summaryContainer.add([
             this.summarySprite,
@@ -337,15 +357,16 @@ export default class FireRedMenuUI {
         this.pokedexContainer = this.scene.add.container(40, 18).setVisible(false);
         this.pokedexContainer.add(this.createPanelGraphics(720, 404, COLORS.panelBackground));
         this.pokedexContainer.add(this.createDivider(238, 12, 372, COLORS.panelBorder, true));
-        this.pokedexContainer.add(this.createText(20, 14, "POKEDEX", 10));
+        this.pokedexContainer.add(this.createText(20, 14, "POKéDEX", 10));
         this.dexCursor = this.createText(18, 50, "►", 8, COLORS.cursor);
         this.dexEntries = Array.from({ length: 10 }, (_, index) => this.createText(40, 50 + (index * 32), "", 8));
         this.dexSprite = this.scene.add.image(378, 98, "currentPlayer", "misa-front").setVisible(false).setScale(1.2);
         this.dexDetailLines = Array.from({ length: 6 }, (_, index) => this.createText(320, 162 + (index * 28), "", 8));
+        this.dexDetailLines[5].setWordWrapWidth(376).setLineSpacing(4);
         this.dexStatLabels = Array.from({ length: 6 }, (_, index) => this.createText(320, 92 + (index * 26), "", 8));
         this.dexStatBarsBg = Array.from({ length: 6 }, () => this.scene.add.graphics());
         this.dexStatBarsFill = Array.from({ length: 6 }, () => this.scene.add.graphics());
-        this.dexFooter = this.createText(22, 374, "X / ESC TERUG", 8);
+        this.dexFooter = this.createText(22, 374, "X / ÉCHAP : RETOUR", 8);
         this.pokedexContainer.add([
             this.dexCursor,
             ...this.dexEntries,
@@ -362,15 +383,16 @@ export default class FireRedMenuUI {
     createBagScreen() {
         this.bagContainer = this.scene.add.container(38, 18).setVisible(false);
         this.bagContainer.add(this.createPanelGraphics(724, 404, COLORS.panelBackground));
-        this.bagContainer.add(this.createText(20, 14, "BAG", 10));
-        this.bagTabLabels = getBagCategories().map((category, index) => this.createText(22 + (index * 132), 44, category, 8));
+        this.bagContainer.add(this.createText(20, 14, "SAC", 10));
+        this.bagTabLabels = getBagCategories().map((category, index) => this.createText(22 + (index * 132), 44, bagCategoryLabel(category), 8));
         this.bagCursor = this.createText(18, 86, "►", 8, COLORS.cursor);
         this.bagItemLabels = Array.from({ length: 8 }, (_, index) => this.createText(40, 86 + (index * 32), "", 8));
         this.bagDetailPanel = this.scene.add.container(360, 82);
         this.bagDetailPanel.add(this.createPanelGraphics(340, 282, COLORS.panelBlueDark));
         this.bagDetailLines = Array.from({ length: 7 }, (_, index) => this.createText(16, 18 + (index * 36), "", 8, COLORS.textOnBlue));
+        this.bagDetailLines[6].setWordWrapWidth(308).setLineSpacing(4);
         this.bagDetailPanel.add(this.bagDetailLines);
-        this.bagFooter = this.createText(22, 374, "LEFT/RIGHT TAB  X TERUG", 8);
+        this.bagFooter = this.createText(22, 374, "GAUCHE/DROITE : POCHE  X : RETOUR", 8);
         this.bagContainer.add([...this.bagTabLabels, this.bagCursor, ...this.bagItemLabels, this.bagDetailPanel, this.bagFooter]);
         this.root.add(this.bagContainer);
     }
@@ -378,9 +400,9 @@ export default class FireRedMenuUI {
     createSaveScreen() {
         this.saveContainer = this.scene.add.container(178, 90).setVisible(false);
         this.saveContainer.add(this.createPanelGraphics(420, 238, COLORS.panelBackground));
-        this.saveTitle = this.createText(18, 16, "SAVE", 10);
+        this.saveTitle = this.createText(18, 16, "SAUVER", 10);
         this.saveLines = Array.from({ length: 5 }, (_, index) => this.createText(18, 56 + (index * 28), "", 8));
-        this.saveButton = this.createText(118, 198, "► Opslaan", 10, COLORS.cursor);
+        this.saveButton = this.createText(118, 198, "► Sauvegarder", 10, COLORS.cursor);
         this.saveContainer.add([this.saveTitle, ...this.saveLines, this.saveButton]);
         this.root.add(this.saveContainer);
     }
@@ -388,11 +410,11 @@ export default class FireRedMenuUI {
     createOptionsScreen() {
         this.optionsContainer = this.scene.add.container(100, 44).setVisible(false);
         this.optionsContainer.add(this.createPanelGraphics(560, 360, COLORS.panelBackground));
-        this.optionsContainer.add(this.createText(20, 14, "OPTION", 10));
+        this.optionsContainer.add(this.createText(20, 14, "OPTIONS", 10));
         this.optionCursor = this.createText(16, 66, "►", 8, COLORS.cursor);
         this.optionLabels = OPTION_FIELDS.map((field, index) => this.createText(42, 66 + (index * 46), field.label, 8));
         this.optionValues = OPTION_FIELDS.map((field, index) => this.createText(360, 66 + (index * 46), "", 8));
-        this.optionFooter = this.createText(20, 326, "LEFT/RIGHT WIJZIGEN  X TERUG", 8);
+        this.optionFooter = this.createText(20, 326, "GAUCHE/DROITE : CHANGER  X : RETOUR", 8);
         this.optionsContainer.add([this.optionCursor, ...this.optionLabels, ...this.optionValues, this.optionFooter]);
         this.root.add(this.optionsContainer);
     }
@@ -655,7 +677,7 @@ export default class FireRedMenuUI {
             const secondName = this.state.party[this.partyIndex]?.name || "";
             this.switchSourceIndex = null;
             if (success) {
-                this.showMessage(`${firstName} en ${secondName} gewisseld!`);
+                this.showMessage(`${firstName} et ${secondName} échangés !`);
             }
             this.refreshPartyView();
             return;
@@ -705,7 +727,7 @@ export default class FireRedMenuUI {
             if (action === "Switch") {
                 this.switchSourceIndex = this.partyIndex;
                 this.itemMode = "none";
-                this.showMessage(`${this.state.party[this.partyIndex]?.name} geselecteerd.`);
+                this.showMessage(`${this.state.party[this.partyIndex]?.name} sélectionné.`);
                 this.refreshPartyView();
                 return;
             }
@@ -858,7 +880,7 @@ export default class FireRedMenuUI {
                 return;
             }
 
-            this.showMessage("Dat item kun je hier niet gebruiken.");
+            this.showMessage("Impossible d'utiliser cet objet ici.");
         }
     }
 
@@ -874,7 +896,7 @@ export default class FireRedMenuUI {
 
         if (this.isConfirmPressed()) {
             saveGame();
-            this.showMessage("SPEL OPGESLAGEN.");
+            this.showMessage("PARTIE SAUVEGARDÉE.");
             this.refreshSaveView();
         }
     }
@@ -940,9 +962,9 @@ export default class FireRedMenuUI {
 
             entry.container.setVisible(true);
             entry.name.setText(pokemon.name.toUpperCase());
-            entry.level.setText(`Lv.${pokemon.level}`);
+            entry.level.setText(`N.${pokemon.level}`);
             entry.hpText.setText(`${pokemon.stats.hp}/${pokemon.stats.maxHp}`);
-            entry.heldItem.setText(pokemon.heldItem ? `Item: ${pokemon.heldItem.name}` : "");
+            entry.heldItem.setText(pokemon.heldItem ? `Objet : ${pokemon.heldItem.name}` : "");
 
             const textureKey = getPokemonTextureKey(pokemon.id);
             if (this.scene.textures.exists(textureKey)) {
@@ -958,7 +980,7 @@ export default class FireRedMenuUI {
             const statusCode = this.getStatusCode(pokemon);
             entry.status.setVisible(Boolean(statusCode));
             if (statusCode) {
-                entry.status.setText(statusCode);
+                entry.status.setText(statusLabel(statusCode));
                 entry.status.setStyle({ backgroundColor: this.getStatusColor(statusCode) });
             }
 
@@ -979,7 +1001,7 @@ export default class FireRedMenuUI {
         const holdableItems = this.getHoldableItems();
         this.itemPanel.setVisible(this.itemMode === "hold");
         if (this.itemMode === "hold") {
-            this.itemTitle.setText("HELD ITEM");
+            this.itemTitle.setText("OBJET TENU");
             this.itemCursor.setVisible(this.cursorVisible);
             this.itemCursor.y = 42 + (this.partyActionIndex * 26);
             this.itemLabels.forEach((label, index) => {
@@ -987,7 +1009,7 @@ export default class FireRedMenuUI {
                 if (index < holdableItems.length) {
                     label.setText(`${item.name} x${item.quantity}`);
                 } else if (index === holdableItems.length) {
-                    label.setText("Cancel");
+                    label.setText("Retour");
                 } else {
                     label.setText("");
                 }
@@ -1022,12 +1044,12 @@ export default class FireRedMenuUI {
         if (this.summaryPage === 0) {
             const nextLevelExp = Math.max(pokemon.exp + 3000, Math.floor(pokemon.exp * 1.28));
             const lines = [
-                `No. ${String(pokemon.id).padStart(3, "0")}  Lv. ${pokemon.level}`,
-                `OT: ${pokemon.originalTrainer}`,
-                `ID: ${String(pokemon.trainerId).padStart(5, "0")}`,
-                `EXP: ${pokemon.exp} / ${nextLevelExp}`,
-                `${pokemon.type.join(" / ")}`,
-                `Item: ${pokemon.heldItem?.name || "Geen"}`,
+                `N° ${String(pokemon.id).padStart(3, "0")}  N. ${pokemon.level}`,
+                `DO : ${pokemon.originalTrainer}`,
+                `ID : ${String(pokemon.trainerId).padStart(5, "0")}`,
+                `EXP : ${pokemon.exp} / ${nextLevelExp}`,
+                typesLabel(pokemon.type),
+                `Objet : ${pokemon.heldItem?.name || "Aucun"}`,
                 `${pokemon.category || ""}`
             ];
             this.summaryInfoLines.forEach((line, index) => line.setText(lines[index] || ""));
@@ -1036,12 +1058,12 @@ export default class FireRedMenuUI {
 
         if (this.summaryPage === 1) {
             const stats = [
-                ["Max HP", pokemon.stats.maxHp],
-                ["Aanval", pokemon.stats.attack],
-                ["Verdediging", pokemon.stats.defense],
-                ["Sp.Atk", pokemon.stats.spAttack],
-                ["Sp.Def", pokemon.stats.spDefense],
-                ["Snelheid", pokemon.stats.speed]
+                ["PV max", pokemon.stats.maxHp],
+                ["Attaque", pokemon.stats.attack],
+                ["Défense", pokemon.stats.defense],
+                ["Atq. Spé.", pokemon.stats.spAttack],
+                ["Déf. Spé.", pokemon.stats.spDefense],
+                ["Vitesse", pokemon.stats.speed]
             ];
             stats.forEach(([label, value], index) => {
                 this.summaryStatsLines[index].setText(`${label.padEnd(11, " ")} ${String(value)}`);
@@ -1061,29 +1083,29 @@ export default class FireRedMenuUI {
                     return;
                 }
                 line.setColor(this.getPpColor(move));
-                line.setText(`${move.displayName}\nPP ${move.currentPp}/${move.maxPp}\n[${move.type}]`);
+                line.setText(`${move.displayName}\nPP ${move.currentPp}/${move.maxPp}\n[${typeLabel(move.type)}]`);
             });
             const selectedMove = moves[this.summaryMoveIndex];
             const detailLines = selectedMove
                 ? [
                     selectedMove.displayName,
-                    `${selectedMove.type} - ${selectedMove.category}`,
-                    `Kracht: ${selectedMove.power ?? "--"}`,
-                    `Acc: ${selectedMove.accuracy ?? "--"}`,
+                    `${typeLabel(selectedMove.type)} - ${moveCategoryLabel(selectedMove.category)}`,
+                    `Puissance : ${selectedMove.power ?? "--"}`,
+                    `Précision : ${selectedMove.accuracy ?? "--"}`,
                     selectedMove.desc
                 ]
-                : ["Geen move"];
+                : ["Aucune capacité"];
             this.summaryMoveDetail.forEach((line, index) => line.setText(detailLines[index] || ""));
             return;
         }
 
         const memoLines = [
-            `Nature: ${pokemon.nature}`,
-            `Met op: ${pokemon.met?.mapId || "Onbekend"}`,
-            `Niveau bij vangen: ${pokemon.met?.level || pokemon.level}`,
-            `Status: ${this.getStatusCode(pokemon) || "OK"}`,
-            `Beschrijving:`,
-            pokemon.description || "Geen memo beschikbaar."
+            `Nature : ${natureLabel(pokemon.nature)}`,
+            `Rencontré : ${mapLabel(pokemon.met?.mapId)}`,
+            `Niveau de capture : ${pokemon.met?.level || pokemon.level}`,
+            `Statut : ${statusLabel(this.getStatusCode(pokemon)) || "OK"}`,
+            `Description :`,
+            pokemon.description || "Aucun mémo disponible."
         ];
         this.summaryMemoLines.forEach((line, index) => line.setText(memoLines[index] || ""));
     }
@@ -1124,25 +1146,25 @@ export default class FireRedMenuUI {
         this.dexStatBarsFill.forEach((bar) => bar.clear());
 
         if (entry.state === "unseen") {
-            this.dexDetailLines[0].setText("Deze Pokémon is nog niet gezien.");
+            this.dexDetailLines[0].setText("Ce Pokémon n'a pas encore été vu.");
             return;
         }
 
         this.dexDetailLines[0].setText(this.getLocalizedDexValue(entry, "name").toUpperCase());
         this.dexDetailLines[1].setText(this.getLocalizedDexValue(entry, "category"));
-        this.dexDetailLines[2].setText(entry.state === "caught" ? "[Gevangen]" : "[Gezien]");
-        this.dexDetailLines[3].setText(entry.types.join(" / "));
-        this.dexDetailLines[4].setText(`Lengte ${entry.height} m  Gewicht ${entry.weight} kg`);
-        this.dexDetailLines[5].setText(entry.state === "caught" ? this.getLocalizedDexValue(entry, "description") : "Meer data komt na vangen.");
+        this.dexDetailLines[2].setText(entry.state === "caught" ? "[Attrapé]" : "[Vu]");
+        this.dexDetailLines[3].setText(typesLabel(entry.types));
+        this.dexDetailLines[4].setText(`Taille ${entry.height} m  Poids ${entry.weight} kg`);
+        this.dexDetailLines[5].setText(entry.state === "caught" ? this.getLocalizedDexValue(entry, "description") : "Plus d'infos après capture.");
 
         if (entry.state === "caught") {
             const stats = [
-                ["HP", entry.baseStats.hp],
-                ["ATK", entry.baseStats.attack],
+                ["PV ", entry.baseStats.hp],
+                ["ATQ", entry.baseStats.attack],
                 ["DEF", entry.baseStats.defense],
-                ["SPA", entry.baseStats.spAtk],
-                ["SPD", entry.baseStats.spDef],
-                ["SPE", entry.baseStats.speed]
+                ["ATS", entry.baseStats.spAtk],
+                ["DFS", entry.baseStats.spDef],
+                ["VIT", entry.baseStats.speed]
             ];
             stats.forEach(([label, value], index) => {
                 this.dexStatLabels[index].setText(`${label} ${String(value).padStart(3, " ")}`);
@@ -1175,24 +1197,24 @@ export default class FireRedMenuUI {
         const details = item
             ? [
                 item.name,
-                `Categorie: ${categories[this.bagTabIndex]}`,
-                `Aantal: ${item.quantity}`,
-                `Type: ${item.effect.type}`,
-                item.effect.value ? `Waarde: ${item.effect.value}` : "",
-                item.effect.status ? `Status: ${item.effect.status}` : "",
+                `Poche : ${bagCategoryLabel(categories[this.bagTabIndex])}`,
+                `Quantité : ${item.quantity}`,
+                `Effet : ${ITEM_EFFECT_LABELS[item.effect.type] || item.effect.type}`,
+                item.effect.value && item.effect.type !== "tm" ? `Valeur : ${item.effect.value}` : "",
+                item.effect.status ? `Statut : ${statusLabel(item.effect.status)}` : "",
                 item.desc
             ]
-            : ["Geen items in deze tab."];
+            : ["Aucun objet dans cette poche."];
         this.bagDetailLines.forEach((line, index) => line.setText(details[index] || ""));
     }
 
     refreshSaveView() {
         const preview = getSavePreview();
-        this.saveLines[0].setText(`Trainer: ${preview.playerName}`);
-        this.saveLines[1].setText(`Badges: ${preview.badges}`);
-        this.saveLines[2].setText(`Pokedex: ${preview.pokedexSeen} seen / ${preview.pokedexCaught} caught`);
-        this.saveLines[3].setText(`Speeltijd: ${formatPlayTime(preview.playTime)}`);
-        this.saveLines[4].setText(`Save slot: ${preview.saveSlot}`);
+        this.saveLines[0].setText(`Dresseur : ${preview.playerName}`);
+        this.saveLines[1].setText(`Badges : ${preview.badges}`);
+        this.saveLines[2].setText(`Pokédex : ${preview.pokedexSeen} vus / ${preview.pokedexCaught} pris`);
+        this.saveLines[3].setText(`Temps de jeu : ${formatPlayTime(preview.playTime)}`);
+        this.saveLines[4].setText(`Emplacement : ${preview.saveSlot}`);
         this.saveButton.setColor(COLORS.cursor);
     }
 
@@ -1201,7 +1223,7 @@ export default class FireRedMenuUI {
         this.optionCursor.y = 66 + (this.optionIndex * 46);
         OPTION_FIELDS.forEach((field, index) => {
             const value = this.state.options[field.key];
-            const formattedValue = field.format ? field.format(value) : String(value).toUpperCase();
+            const formattedValue = field.format ? field.format(value) : (OPTION_VALUE_LABELS[value] || String(value).toUpperCase());
             this.optionLabels[index].setColor(index === this.optionIndex ? COLORS.cursor : COLORS.text);
             this.optionValues[index].setText(formattedValue);
             this.optionValues[index].setColor(index === this.optionIndex ? COLORS.cursor : COLORS.text);
@@ -1283,8 +1305,9 @@ export default class FireRedMenuUI {
     }
 
     getLocalizedDexValue(entry, field) {
-        const languageCode = this.state.options?.pokedexLanguage || "en";
+        const languageCode = this.state.options?.pokedexLanguage || "fr";
         return entry.localizedDex?.[languageCode]?.[field]
+            || entry.localizedDex?.fr?.[field]
             || entry.localizedDex?.en?.[field]
             || entry[field]
             || "";

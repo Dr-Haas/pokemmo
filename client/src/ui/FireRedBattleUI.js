@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import {
     createBattlePokemonFromCatalog,
     getBattleReadyParty,
+    getEnglishSpeciesName,
     getFirstAvailablePartyIndex,
     getPokemonBackTextureKey,
     getTrainerName,
@@ -9,6 +10,7 @@ import {
     markPokemonSeen,
     updateParty
 } from "../state/gameState";
+import { statusLabel } from "../i18n";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const TYPE_COLORS = {
@@ -46,10 +48,10 @@ const COLORS = {
     flash: 0xffffff
 };
 const COMMANDS = [
-    { id: "FIGHT", label: "FIGHT" },
-    { id: "BAG", label: "BAG" },
+    { id: "FIGHT", label: "ATTAQUE" },
+    { id: "BAG", label: "SAC" },
     { id: "POKEMON", label: "POKéMON" },
-    { id: "RUN", label: "RUN" }
+    { id: "RUN", label: "FUITE" }
 ];
 const LAYOUT = {
     enemyHud: { x: 0.54, y: 0.07, width: 0.25, height: 0.17 },
@@ -160,12 +162,12 @@ export default class FireRedBattleUI {
 
         await this.ensurePokemonTexture(
             getWildPokemonTextureKey(wildPokemon.id),
-            getAnimatedSpriteUrl(wildPokemon.name, "enemy"),
+            getAnimatedSpriteUrl(wildPokemon, "enemy"),
             wildPokemon.sprite
         );
         await this.ensurePokemonTexture(
             getPokemonBackTextureKey(party[activePartyIndex].id),
-            getAnimatedSpriteUrl(party[activePartyIndex].name, "player"),
+            getAnimatedSpriteUrl(party[activePartyIndex], "player"),
             party[activePartyIndex].backSprite
         );
 
@@ -184,8 +186,8 @@ export default class FireRedBattleUI {
         this.resetVisualState();
         this.refreshBattleView(true);
         this.setMessages([
-            `Wild ${wildPokemon.name} appeared!`,
-            `Go! ${party[activePartyIndex].name}!`
+            `Un ${wildPokemon.name} sauvage apparaît !`,
+            `Go ! ${party[activePartyIndex].name} !`
         ]);
         return true;
     }
@@ -263,7 +265,7 @@ export default class FireRedBattleUI {
 
         this.partyPanel = this.createPanel(LAYOUT.partyPanel.x, LAYOUT.partyPanel.y, LAYOUT.partyPanel.width, LAYOUT.partyPanel.height);
         this.partyPanel.setVisible(false);
-        this.partyTitle = this.createText(LAYOUT.partyPanel.x + 18, LAYOUT.partyPanel.y + 18, "CHOOSE POKéMON", 10);
+        this.partyTitle = this.createText(LAYOUT.partyPanel.x + 18, LAYOUT.partyPanel.y + 18, "CHOISIS UN POKéMON", 10);
         this.partyCursor = this.createText(LAYOUT.partyPanel.x + 20, LAYOUT.partyPanel.y + 62, "►", 10, COLORS.cursor);
         this.partyEntryLabels = Array.from({ length: 6 }, (_, index) => this.createText(
             LAYOUT.partyPanel.x + 44,
@@ -271,7 +273,7 @@ export default class FireRedBattleUI {
             "",
             8
         ));
-        this.partyFooter = this.createText(LAYOUT.partyPanel.x + 18, LAYOUT.partyPanel.y + LAYOUT.partyPanel.height - 30, "X / ESC CANCEL", 8, COLORS.cursor);
+        this.partyFooter = this.createText(LAYOUT.partyPanel.x + 18, LAYOUT.partyPanel.y + LAYOUT.partyPanel.height - 30, "X / ÉCHAP : RETOUR", 8, COLORS.cursor);
 
         [
             this.background,
@@ -396,7 +398,7 @@ export default class FireRedBattleUI {
         background.setStrokeStyle(3, COLORS.panelBorder);
         const name = this.createText(14, 12, "", 10);
         const level = this.createText(width - 14, 12, "", 8).setOrigin(1, 0);
-        const hpLabel = this.createText(14, height - 30, "HP", 8);
+        const hpLabel = this.createText(14, height - 30, "PV", 8);
         const hpValue = this.createText(width - 14, height - 30, "", 8).setOrigin(1, 0);
         const hpBarBackground = this.scene.add.rectangle(54, height - 20, width - 82, 8, COLORS.hpBackground).setOrigin(0, 0.5);
         const hpBarFill = this.scene.add.rectangle(54, height - 20, width - 82, 8, COLORS.hpGreen).setOrigin(0, 0.5);
@@ -515,7 +517,7 @@ export default class FireRedBattleUI {
         this.partyEntryLabels.forEach((label, index) => {
             const pokemon = this.battle.party[index];
             label.setVisible(showParty);
-            label.setText(pokemon ? `${pokemon.name} Lv.${pokemon.level} HP ${pokemon.stats.hp}/${pokemon.stats.maxHp}` : "");
+            label.setText(pokemon ? `${pokemon.name} N.${pokemon.level} PV ${pokemon.stats.hp}/${pokemon.stats.maxHp}` : "");
             label.setColor(index === this.switchIndex ? COLORS.cursor : pokemon?.stats.hp > 0 ? COLORS.text : "#8a8a8a");
         });
 
@@ -560,7 +562,7 @@ export default class FireRedBattleUI {
         const hpPercent = pokemon.stats.maxHp > 0 ? hp / pokemon.stats.maxHp : 0;
 
         panel.name.setText(pokemon.name);
-        panel.level.setText(`Lv.${pokemon.level}`);
+        panel.level.setText(`N.${pokemon.level}`);
         panel.renderedHp = hp;
 
         if (panel.showHpValue) {
@@ -653,12 +655,12 @@ export default class FireRedBattleUI {
 
         if (commandId === "RUN") {
             this.battle.finished = true;
-            this.currentLogMessage = `Got away safely from ${this.battle.wildPokemon.name}!`;
+            this.currentLogMessage = "Vous prenez la fuite !";
             this.enterFinalMessagePhase();
             return;
         }
 
-        this.setMessages(["The Bag is empty.", "Choose another command."]);
+        this.setMessages(["Le SAC est vide.", "Choisis une autre action."]);
     }
 
     handleMoveInput() {
@@ -689,7 +691,7 @@ export default class FireRedBattleUI {
             }
 
             if (move?.currentPp <= 0) {
-                this.setMessages(["No PP left for that move."]);
+                this.setMessages(["Plus de PP pour cette capacité !"]);
             }
         }
     }
@@ -727,13 +729,13 @@ export default class FireRedBattleUI {
         this.phase = "busy";
         await this.ensurePokemonTexture(
             getPokemonBackTextureKey(nextPokemon.id),
-            getAnimatedSpriteUrl(nextPokemon.name, "player"),
+            getAnimatedSpriteUrl(nextPokemon, "player"),
             nextPokemon.backSprite
         );
         this.battle.activePartyIndex = nextIndex;
         this.refreshBattleView(true);
         await this.animateSendOut(this.playerSlot);
-        this.currentLogMessage = `Go! ${nextPokemon.name}!`;
+        this.currentLogMessage = `Go ! ${nextPokemon.name} !`;
         this.phase = "command";
         this.refreshBattleView();
         this.syncPartyState();
@@ -771,13 +773,13 @@ export default class FireRedBattleUI {
                 const attackerSlot = turn.side === "player" ? this.playerSlot : this.enemySlot;
                 const defenderSlot = turn.side === "player" ? this.enemySlot : this.playerSlot;
                 const defenderPanel = turn.side === "player" ? this.enemyInfo : this.playerInfo;
-                const attackerName = turn.side === "player" ? turn.user.name : `Wild ${turn.user.name}`;
+                const attackerName = turn.side === "player" ? turn.user.name : `${turn.user.name} sauvage`;
 
-                await this.showBattleLog(`${attackerName} used ${turn.move.displayName}!`);
+                await this.showBattleLog(`${attackerName} utilise ${turn.move.displayName} !`);
                 const shouldCheckAccuracy = Number.isFinite(turn.move.accuracy);
                 if (shouldCheckAccuracy && Math.random() * 100 > turn.move.accuracy) {
                     await this.animateMiss(attackerSlot, turn.move);
-                    await this.showBattleLog("But it missed!", 380);
+                    await this.showBattleLog("Mais cela échoue !", 380);
                     continue;
                 }
 
@@ -787,24 +789,24 @@ export default class FireRedBattleUI {
 
                 await this.animateMove(attackerSlot, defenderSlot, turn.move, defenderPanel, turn.target, hpBefore, turn.target.stats.hp);
                 if (outcome.damage > 0) {
-                    await this.showBattleLog(`${turn.target.name} lost ${outcome.damage} HP!`, 340);
+                    await this.showBattleLog(`${turn.target.name} perd ${outcome.damage} PV !`, 340);
                 } else if (turn.move.damageClass === "status") {
-                    await this.showBattleLog("But nothing happened!", 300);
+                    await this.showBattleLog("Mais rien ne se passe !", 300);
                 } else if (outcome.effectiveness === 0) {
-                    await this.showBattleLog("It doesn't affect the target...", 320);
+                    await this.showBattleLog("Ça n'affecte pas la cible...", 320);
                 }
 
                 if (outcome.effectiveness > NEUTRAL_EFFECTIVENESS) {
-                    await this.showBattleLog("It's super effective!", 320);
+                    await this.showBattleLog("C'est super efficace !", 320);
                 } else if (outcome.effectiveness > 0 && outcome.effectiveness < NEUTRAL_EFFECTIVENESS) {
-                    await this.showBattleLog("It's not very effective...", 320);
+                    await this.showBattleLog("Ce n'est pas très efficace...", 320);
                 }
 
                 if (turn.target.stats.hp <= 0) {
                     await this.animateFaint(defenderSlot);
                     this.currentLogMessage = turn.side === "player"
-                        ? `Wild ${turn.target.name} fainted!`
-                        : `${turn.target.name} fainted!`;
+                        ? `${turn.target.name} sauvage est K.O. !`
+                        : `${turn.target.name} est K.O. !`;
                     await this.showBattleLog(this.currentLogMessage, 420);
                 }
             }
@@ -839,17 +841,17 @@ export default class FireRedBattleUI {
                 const nextPokemon = this.battle.party[nextIndex];
                 await this.ensurePokemonTexture(
                     getPokemonBackTextureKey(nextPokemon.id),
-                    getAnimatedSpriteUrl(nextPokemon.name, "player"),
+                    getAnimatedSpriteUrl(nextPokemon, "player"),
                     nextPokemon.backSprite
                 );
                 this.battle.activePartyIndex = nextIndex;
                 this.refreshBattleView(true);
                 await this.animateSendOut(this.playerSlot);
-                await this.showBattleLog(`Go! ${nextPokemon.name}!`, 400);
+                await this.showBattleLog(`Go ! ${nextPokemon.name} !`, 400);
             } else {
                 this.healPartyAfterWhiteout();
                 this.battle.finished = true;
-                this.currentLogMessage = "You rushed back to safety.";
+                this.currentLogMessage = "Vous retournez vous mettre à l'abri.";
                 this.enterFinalMessagePhase();
                 return;
             }
@@ -938,7 +940,7 @@ export default class FireRedBattleUI {
         const badge = this.createText(
             defenderSlot.baseX,
             defenderSlot.baseY - Math.max(56, defenderSlot.sprite.displayHeight + 16),
-            status || "STATUS",
+            statusLabel(status) || "STATUT",
             8,
             "#ffffff"
         )
@@ -1056,7 +1058,7 @@ export default class FireRedBattleUI {
     }
 
     enterFinalMessagePhase() {
-        this.messageQueue = [this.currentLogMessage || "Battle ended."];
+        this.messageQueue = [this.currentLogMessage || "Le combat est terminé."];
         this.messagePage = 0;
         this.phase = "message";
         this.refreshBattleView();
@@ -1330,8 +1332,9 @@ function normalizeShowdownName(name) {
         .replace("nidoranm", "nidoranm");
 }
 
-function getAnimatedSpriteUrl(name, side) {
-    const normalizedName = normalizeShowdownName(name);
+function getAnimatedSpriteUrl(pokemon, side) {
+    // Showdown sprites are named after the English species name, whatever language is shown in game.
+    const normalizedName = normalizeShowdownName(getEnglishSpeciesName(pokemon?.id) || pokemon?.name);
     const base = side === "player"
         ? "https://play.pokemonshowdown.com/sprites/gen5ani-back"
         : "https://play.pokemonshowdown.com/sprites/gen5ani";

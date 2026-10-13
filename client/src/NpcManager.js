@@ -140,19 +140,19 @@ export default class NpcManager {
 }
 
 function createErrorPayload(npc, error) {
-    const message = error?.message || "De connectie met de NPC faalde.";
+    const message = error?.message || "La connexion avec le personnage a échoué.";
     return {
         npc,
         story: {
             clueCount: 0
         },
         response: {
-            lines: ["...", "De emotieverbinding", "werd onderbroken.", message.slice(0, 38)],
+            lines: ["...", "Le lien émotionnel", "a été interrompu.", message.slice(0, 38)],
             emotion: {
                 label: "offline"
             },
             availableChoices: [
-                { id: "GOODBYE", label: "TOT ZIENS" }
+                { id: "GOODBYE", label: "AU REVOIR" }
             ],
             unlockedClue: null
         }
