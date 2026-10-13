@@ -10,6 +10,7 @@ import FireRedBattleUI from "./ui/FireRedBattleUI";
 import PokemonCenterManager from "./PokemonCenterManager";
 import HouseInteriorManager, { findHouseDoors, tilemapKeyFor } from "./HouseInteriorManager";
 import StoryManager from "./StoryManager";
+import { VIEW, setUpCameras } from "./ui/theme";
 import WildEncounterManager from "./WildEncounterManager";
 import { tickPlaySession } from "./state/gameState";
 import PlayerInteractionUI from "./ui/PlayerInteractionUI";
@@ -86,10 +87,11 @@ export class Scene2 extends Phaser.Scene {
         }
 
         const camera = this.cameras.main;
+        this.uiCamera = setUpCameras(this);
         camera.startFollow(this.player);
         // Rooms smaller than the screen (houses, Pokémon Centers) are centered instead of stuck top-left.
-        const boundsWidth = Math.max(this.map.widthInPixels, camera.width);
-        const boundsHeight = Math.max(this.map.heightInPixels, camera.height);
+        const boundsWidth = Math.max(this.map.widthInPixels, VIEW.width);
+        const boundsHeight = Math.max(this.map.heightInPixels, VIEW.height);
         camera.setBounds(
             (this.map.widthInPixels - boundsWidth) / 2,
             (this.map.heightInPixels - boundsHeight) / 2,

@@ -1,10 +1,10 @@
 import Phaser from "phaser";
 import {
     assignHeldItem,
+    experienceProgress,
     formatPlayTime,
     getBagCategories,
     getGameState,
-    getPokemonTextureKey,
     getSavePreview,
     saveGame,
     subscribeToGameState,
@@ -18,6 +18,8 @@ import { CHARACTERS, CHARACTER_ATLAS, standingFrame } from "../characters";
 import { getPlayerCharacter, setPlayerCharacter } from "../playerName";
 import { logout } from "../account";
 import TownMapScreen from "./TownMapScreen";
+import { artKey, loadPokemonArt } from "../pokemonArt";
+import { VIEW } from "./theme";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const MENU_OPTIONS = [
@@ -74,6 +76,8 @@ const COLORS = {
     text: "#2c2c2c",
     textOnBlue: "#ffffff",
     cursor: "#fff4a3",
+    // Selected row on the cream panels (the yellow is for the blue ones).
+    cursorOnLight: "#d0382c",
     hpGreen: 0x48d848,
     hpYellow: 0xf8d800,
     hpRed: 0xf83800,
@@ -260,7 +264,7 @@ export default class FireRedMenuUI {
         this.startMenuHeight = 272;
         this.startMenuY = 28;
         // The menu drops down from the top of the screen.
-        this.startMenuX = this.scene.scale.width - this.startMenuWidth - 20;
+        this.startMenuX = VIEW.width - this.startMenuWidth - 20;
         this.startMenuClosedY = -this.startMenuHeight - 16;
         this.startMenuOpenY = this.startMenuY;
 
@@ -268,7 +272,7 @@ export default class FireRedMenuUI {
         this.startContainer.add(this.createPanelGraphics(this.startMenuWidth, this.startMenuHeight, COLORS.startBackground));
         this.startContainer.add(this.createDivider(16, 54, this.startMenuWidth - 32, COLORS.panelBorder));
         this.startName = this.createText(16, 18, "", 10);
-        this.startCursor = this.createText(14, 78, "►", 10, COLORS.cursor);
+        this.startCursor = this.createText(14, 78, "►", 10, COLORS.cursorOnLight);
         this.startLabels = MENU_OPTIONS.map((option, index) => {
             const label = this.createText(34, 78 + (index * 24), option.label, 10)
                 .setScrollFactor(0)
@@ -300,14 +304,14 @@ export default class FireRedMenuUI {
     createPartyScreen() {
         this.partyContainer = this.scene.add.container(32, 18).setVisible(false);
         this.partyContainer.add(this.createPanelGraphics(736, 406, COLORS.panelBlue));
-        this.partyContainer.add(this.createText(18, 14, "POKéMON", 10, COLORS.textOnBlue));
+        this.partyContainer.add(this.createText(18, 14, "POKÉMON", 10, COLORS.textOnBlue));
         this.partyContainer.add(this.createText(18, 380, "X / ÉCHAP : RETOUR", 8, COLORS.textOnBlue));
         this.partyEntries = Array.from({ length: 6 }, (_, index) => this.createPartyEntry(18, 42 + (index * 54)));
         this.partyEntries.forEach((entry) => this.partyContainer.add(entry.container));
 
         this.partyActionPanel = this.scene.add.container(542, 126).setVisible(false);
         this.partyActionPanel.add(this.createPanelGraphics(170, 128, COLORS.panelBackground));
-        this.partyActionCursor = this.createText(12, 16, "►", 8, COLORS.cursor);
+        this.partyActionCursor = this.createText(12, 16, "►", 8, COLORS.cursorOnLight);
         this.partyActionLabels = PARTY_ACTIONS.map((action, index) => this.createText(30, 16 + (index * 24), PARTY_ACTION_LABELS[action], 8));
         this.partyActionPanel.add([this.partyActionCursor, ...this.partyActionLabels]);
         this.partyContainer.add(this.partyActionPanel);
@@ -315,7 +319,7 @@ export default class FireRedMenuUI {
         this.itemPanel = this.scene.add.container(470, 58).setVisible(false);
         this.itemPanel.add(this.createPanelGraphics(242, 286, COLORS.panelBackground));
         this.itemTitle = this.createText(14, 14, "OBJET", 8);
-        this.itemCursor = this.createText(14, 42, "►", 8, COLORS.cursor);
+        this.itemCursor = this.createText(14, 42, "►", 8, COLORS.cursorOnLight);
         this.itemLabels = Array.from({ length: 8 }, (_, index) => this.createText(34, 42 + (index * 26), "", 8));
         this.itemPanel.add([this.itemTitle, this.itemCursor, ...this.itemLabels]);
         this.partyContainer.add(this.itemPanel);
@@ -327,7 +331,7 @@ export default class FireRedMenuUI {
         const container = this.scene.add.container(x, y);
         const background = this.scene.add.graphics();
         const cursor = this.createText(10, 16, "►", 10, COLORS.cursor);
-        const sprite = this.scene.add.image(58, 24, "currentPlayer", "misa-front").setVisible(false).setScale(0.5);
+        const sprite = this.scene.add.image(58, 24, "currentPlayer", "misa-front").setVisible(false);
         const name = this.createText(92, 10, "", 8, COLORS.textOnBlue);
         const status = this.scene.add.text(354, 10, "", {
             fontFamily: FONT_FAMILY,
@@ -339,10 +343,11 @@ export default class FireRedMenuUI {
         const level = this.createText(516, 10, "", 8, COLORS.textOnBlue);
         const hpBarBg = this.scene.add.graphics();
         const hpBarFill = this.scene.add.graphics();
+        const expBar = this.scene.add.graphics();
         const hpText = this.createText(316, 28, "", 8, COLORS.textOnBlue);
         const heldItem = this.createText(92, 28, "", 8, COLORS.textOnBlue);
-        container.add([background, cursor, sprite, name, status, level, hpBarBg, hpBarFill, hpText, heldItem]);
-        return { container, background, cursor, sprite, name, status, level, hpBarBg, hpBarFill, hpText, heldItem };
+        container.add([background, cursor, sprite, name, status, level, hpBarBg, hpBarFill, expBar, hpText, heldItem]);
+        return { container, background, cursor, sprite, name, status, level, hpBarBg, hpBarFill, expBar, hpText, heldItem };
     }
 
     createSummaryScreen() {
@@ -359,7 +364,7 @@ export default class FireRedMenuUI {
         this.summaryStatBarsBg = Array.from({ length: 6 }, () => this.scene.add.graphics());
         this.summaryStatBarsFill = Array.from({ length: 6 }, () => this.scene.add.graphics());
 
-        this.summaryMoveCursor = this.createText(28, 54, "►", 8, COLORS.cursor);
+        this.summaryMoveCursor = this.createText(28, 54, "►", 8, COLORS.cursorOnLight);
         this.summaryMoveLabels = Array.from({ length: 4 }, (_, index) => this.createText(54, 54 + (index * 58), "", 8));
         this.summaryMovePanel = this.scene.add.container(382, 64);
         this.summaryMovePanel.add(this.createPanelGraphics(270, 216, COLORS.panelBlueDark));
@@ -392,13 +397,15 @@ export default class FireRedMenuUI {
         this.pokedexContainer = this.scene.add.container(40, 18).setVisible(false);
         this.pokedexContainer.add(this.createPanelGraphics(720, 404, COLORS.panelBackground));
         this.pokedexContainer.add(this.createDivider(238, 12, 372, COLORS.panelBorder, true));
-        this.pokedexContainer.add(this.createText(20, 14, "POKéDEX", 10));
-        this.dexCursor = this.createText(18, 50, "►", 8, COLORS.cursor);
+        this.pokedexContainer.add(this.createText(20, 14, "POKÉDEX", 10));
+        this.dexCursor = this.createText(18, 50, "►", 8, COLORS.cursorOnLight);
         this.dexEntries = Array.from({ length: 10 }, (_, index) => this.createText(40, 50 + (index * 32), "", 8));
-        this.dexSprite = this.scene.add.image(378, 98, "currentPlayer", "misa-front").setVisible(false).setScale(1.2);
-        this.dexDetailLines = Array.from({ length: 6 }, (_, index) => this.createText(320, 162 + (index * 28), "", 8));
-        this.dexDetailLines[5].setWordWrapWidth(376).setLineSpacing(4);
-        this.dexStatLabels = Array.from({ length: 6 }, (_, index) => this.createText(320, 92 + (index * 26), "", 8));
+        // Right side: picture and identity on top, base stats bottom left, description bottom right.
+        this.dexSprite = this.scene.add.image(330, 112, "currentPlayer", "misa-front").setVisible(false);
+        this.dexDetailLines = Array.from({ length: 6 }, (_, index) => this.createText(420, 46 + (index * 26), "", 8));
+        this.dexDetailLines[0].setFontSize(16);
+        this.dexDetailLines[5].setPosition(500, 200).setWordWrapWidth(200).setLineSpacing(4);
+        this.dexStatLabels = Array.from({ length: 6 }, (_, index) => this.createText(262, 196 + (index * 26), "", 8));
         this.dexStatBarsBg = Array.from({ length: 6 }, () => this.scene.add.graphics());
         this.dexStatBarsFill = Array.from({ length: 6 }, () => this.scene.add.graphics());
         this.dexFooter = this.createText(22, 374, "X / ÉCHAP : RETOUR", 8);
@@ -420,7 +427,7 @@ export default class FireRedMenuUI {
         this.bagContainer.add(this.createPanelGraphics(724, 404, COLORS.panelBackground));
         this.bagContainer.add(this.createText(20, 14, "SAC", 10));
         this.bagTabLabels = getBagCategories().map((category, index) => this.createText(22 + (index * 132), 44, bagCategoryLabel(category), 8));
-        this.bagCursor = this.createText(18, 86, "►", 8, COLORS.cursor);
+        this.bagCursor = this.createText(18, 86, "►", 8, COLORS.cursorOnLight);
         this.bagItemLabels = Array.from({ length: 8 }, (_, index) => this.createText(40, 86 + (index * 32), "", 8));
         this.bagDetailPanel = this.scene.add.container(360, 82);
         this.bagDetailPanel.add(this.createPanelGraphics(340, 282, COLORS.panelBlueDark));
@@ -437,7 +444,7 @@ export default class FireRedMenuUI {
         this.saveContainer.add(this.createPanelGraphics(420, 238, COLORS.panelBackground));
         this.saveTitle = this.createText(18, 16, "SAUVER", 10);
         this.saveLines = Array.from({ length: 5 }, (_, index) => this.createText(18, 56 + (index * 28), "", 8));
-        this.saveButton = this.createText(118, 198, "► Sauvegarder", 10, COLORS.cursor);
+        this.saveButton = this.createText(118, 198, "► Sauvegarder", 10, COLORS.cursorOnLight);
         this.saveContainer.add([this.saveTitle, ...this.saveLines, this.saveButton]);
         this.root.add(this.saveContainer);
     }
@@ -446,7 +453,7 @@ export default class FireRedMenuUI {
         this.optionsContainer = this.scene.add.container(100, 44).setVisible(false);
         this.optionsContainer.add(this.createPanelGraphics(560, 360, COLORS.panelBackground));
         this.optionsContainer.add(this.createText(20, 14, "OPTIONS", 10));
-        this.optionCursor = this.createText(16, 66, "►", 8, COLORS.cursor);
+        this.optionCursor = this.createText(16, 66, "►", 8, COLORS.cursorOnLight);
         this.optionLabels = OPTION_FIELDS.map((field, index) => this.createText(42, 66 + (index * OPTION_ROW_HEIGHT), field.label, 8));
         this.optionValues = OPTION_FIELDS.map((field, index) => this.createText(360, 66 + (index * OPTION_ROW_HEIGHT), "", 8));
         // Tapping a row changes its value, like pressing RIGHT on it.
@@ -1036,7 +1043,7 @@ export default class FireRedMenuUI {
         this.startCursor.setVisible(this.cursorVisible);
         this.startCursor.y = 78 + (this.startIndex * 24);
         this.startLabels.forEach((label, index) => {
-            label.setColor(index === this.startIndex ? COLORS.cursor : COLORS.text);
+            label.setColor(index === this.startIndex ? COLORS.cursorOnLight : COLORS.text);
         });
     }
 
@@ -1059,9 +1066,8 @@ export default class FireRedMenuUI {
             entry.hpText.setText(`${pokemon.stats.hp}/${pokemon.stats.maxHp}`);
             entry.heldItem.setText(pokemon.heldItem ? `Objet : ${pokemon.heldItem.name}` : "");
 
-            const textureKey = getPokemonTextureKey(pokemon.id);
-            if (this.scene.textures.exists(textureKey)) {
-                entry.sprite.setTexture(textureKey).setVisible(true);
+            if (this.showArt(entry.sprite, pokemon, 50)) {
+                entry.sprite.setVisible(true);
             }
             entry.sprite.clearTint();
             entry.sprite.setAlpha(1);
@@ -1080,6 +1086,10 @@ export default class FireRedMenuUI {
             const hpPct = pokemon.stats.maxHp > 0 ? pokemon.stats.hp / pokemon.stats.maxHp : 0;
             this.drawBar(entry.hpBarBg, 188, 29, 126, 8, COLORS.hpBackground);
             this.drawBar(entry.hpBarFill, 188, 29, Math.round(126 * hpPct), 8, this.getHpColor(hpPct));
+            // EXP bar under the HP
+            entry.expBar.clear();
+            entry.expBar.fillStyle(0x6070b0, 1).fillRect(188, 39, 126, 4);
+            entry.expBar.fillStyle(0x48a0f0, 1).fillRect(188, 39, Math.round(126 * experienceProgress(pokemon)), 4);
         });
 
         this.partyActionPanel.setVisible(this.itemMode === "action");
@@ -1087,7 +1097,7 @@ export default class FireRedMenuUI {
             this.partyActionCursor.setVisible(this.cursorVisible);
             this.partyActionCursor.y = 16 + (this.partyActionIndex * 24);
             this.partyActionLabels.forEach((label, index) => {
-                label.setColor(index === this.partyActionIndex ? COLORS.cursor : COLORS.text);
+                label.setColor(index === this.partyActionIndex ? COLORS.cursorOnLight : COLORS.text);
             });
         }
 
@@ -1106,7 +1116,7 @@ export default class FireRedMenuUI {
                 } else {
                     label.setText("");
                 }
-                label.setColor(index === this.partyActionIndex ? COLORS.cursor : COLORS.text);
+                label.setColor(index === this.partyActionIndex ? COLORS.cursorOnLight : COLORS.text);
             });
         }
     }
@@ -1119,9 +1129,8 @@ export default class FireRedMenuUI {
 
         this.summaryHeader.setText(`${pokemon.name.toUpperCase()}  ${SUMMARY_TABS[this.summaryPage]}`);
         this.summaryPageText.setText(`${this.summaryPage + 1}/4`);
-        const textureKey = getPokemonTextureKey(pokemon.id);
-        if (this.scene.textures.exists(textureKey)) {
-            this.summarySprite.setTexture(textureKey).setVisible(true);
+        if (this.showArt(this.summarySprite, pokemon, 150)) {
+            this.summarySprite.setVisible(true);
         }
 
         this.summaryInfoLines.forEach((line) => line.setVisible(this.summaryPage === 0));
@@ -1215,7 +1224,7 @@ export default class FireRedMenuUI {
             }
             const isUnseen = entry.state === "unseen";
             label.setText(`#${String(entry.id).padStart(3, "0")} ${isUnseen ? "?????????" : this.getLocalizedDexValue(entry, "name")}`);
-            label.setColor((this.pokedexIndex - this.pokedexScroll) === index ? COLORS.cursor : COLORS.text);
+            label.setColor((this.pokedexIndex - this.pokedexScroll) === index ? COLORS.cursorOnLight : COLORS.text);
         });
 
         const entry = this.state.pokedex[this.pokedexIndex];
@@ -1223,12 +1232,8 @@ export default class FireRedMenuUI {
             return;
         }
 
-        const textureKey = getPokemonTextureKey(entry.id);
-        if (entry.state !== "unseen" && entry.sprite) {
-            this.ensureTexture(textureKey, entry.sprite);
-        }
-        if (entry.state !== "unseen" && this.scene.textures.exists(textureKey)) {
-            this.dexSprite.setTexture(textureKey).setVisible(true);
+        if (entry.state !== "unseen" && this.showArt(this.dexSprite, entry, 130)) {
+            this.dexSprite.setVisible(true);
         } else {
             this.dexSprite.setVisible(false);
         }
@@ -1261,8 +1266,8 @@ export default class FireRedMenuUI {
             ];
             stats.forEach(([label, value], index) => {
                 this.dexStatLabels[index].setText(`${label} ${String(value).padStart(3, " ")}`);
-                this.drawBar(this.dexStatBarsBg[index], 438, 100 + (index * 26), 120, 8, COLORS.hpBackground);
-                this.drawBar(this.dexStatBarsFill[index], 438, 100 + (index * 26), Math.min(120, Math.round((value / 160) * 120)), 8, COLORS.hpGreen);
+                this.drawBar(this.dexStatBarsBg[index], 352, 202 + (index * 26), 120, 8, COLORS.hpBackground);
+                this.drawBar(this.dexStatBarsFill[index], 352, 202 + (index * 26), Math.min(120, Math.round((value / 160) * 120)), 8, COLORS.hpGreen);
             });
         }
     }
@@ -1271,7 +1276,7 @@ export default class FireRedMenuUI {
         const categories = getBagCategories();
         const items = this.getVisibleBagItems();
         this.bagTabLabels.forEach((label, index) => {
-            label.setColor(index === this.bagTabIndex ? COLORS.cursor : COLORS.text);
+            label.setColor(index === this.bagTabIndex ? COLORS.cursorOnLight : COLORS.text);
         });
         this.bagCursor.setVisible(this.cursorVisible && items.length > 0);
         this.bagCursor.y = 86 + (this.bagItemIndex * 32);
@@ -1283,7 +1288,7 @@ export default class FireRedMenuUI {
                 return;
             }
             label.setText(`${item.name} x${item.quantity}`);
-            label.setColor(index === this.bagItemIndex ? COLORS.cursor : COLORS.text);
+            label.setColor(index === this.bagItemIndex ? COLORS.cursorOnLight : COLORS.text);
         });
 
         const item = items[this.bagItemIndex] || null;
@@ -1308,7 +1313,7 @@ export default class FireRedMenuUI {
         this.saveLines[2].setText(`Pokédex : ${preview.pokedexSeen} vus / ${preview.pokedexCaught} pris`);
         this.saveLines[3].setText(`Temps de jeu : ${formatPlayTime(preview.playTime)}`);
         this.saveLines[4].setText(`Emplacement : ${preview.saveSlot}`);
-        this.saveButton.setColor(COLORS.cursor);
+        this.saveButton.setColor(COLORS.cursorOnLight);
     }
 
     refreshOptionView() {
@@ -1318,9 +1323,9 @@ export default class FireRedMenuUI {
         OPTION_FIELDS.forEach((field, index) => {
             const value = this.optionValue(field);
             const formattedValue = field.format ? field.format(value) : (OPTION_VALUE_LABELS[value] || String(value).toUpperCase());
-            this.optionLabels[index].setColor(index === this.optionIndex ? COLORS.cursor : COLORS.text);
+            this.optionLabels[index].setColor(index === this.optionIndex ? COLORS.cursorOnLight : COLORS.text);
             this.optionValues[index].setText(formattedValue);
-            this.optionValues[index].setColor(index === this.optionIndex ? COLORS.cursor : COLORS.text);
+            this.optionValues[index].setColor(index === this.optionIndex ? COLORS.cursorOnLight : COLORS.text);
         });
     }
 
@@ -1423,18 +1428,23 @@ export default class FireRedMenuUI {
         });
     }
 
-    ensureTexture(key, url) {
-        if (!key || !url || this.scene.textures.exists(key) || this.loadingTextures.has(key)) {
-            return;
+    // HD picture of a Pokémon at the given size; false until it has loaded (then the view refreshes).
+    showArt(image, pokemon, size) {
+        const key = artKey(pokemon.id);
+        if (!this.scene.textures.exists(key)) {
+            if (!this.loadingTextures.has(key)) {
+                this.loadingTextures.add(key);
+                loadPokemonArt(this.scene, pokemon.id, pokemon.sprite).then(() => {
+                    this.loadingTextures.delete(key);
+                    if (this.root?.active) {
+                        this.refreshVisibleView();
+                    }
+                });
+            }
+            return false;
         }
-
-        this.loadingTextures.add(key);
-        this.scene.load.image(key, url);
-        this.scene.load.once(Phaser.Loader.Events.COMPLETE, () => {
-            this.loadingTextures.delete(key);
-            this.refreshVisibleView();
-        });
-        this.scene.load.start();
+        image.setTexture(key).setDisplaySize(size, size);
+        return true;
     }
 
     isMenuOpenPressed() {

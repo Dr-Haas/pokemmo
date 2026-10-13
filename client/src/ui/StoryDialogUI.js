@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { VIEW } from "./theme";
 
 // Rouge Feu style text box for the adventure: say() shows lines page by page, ask()
 // adds a list of choices. Both return promises, so scripts read top to bottom.
@@ -36,7 +37,7 @@ export default class StoryDialogUI {
             escape: Phaser.Input.Keyboard.KeyCodes.ESC
         });
 
-        const width = scene.scale.width;
+        const width = VIEW.width;
         this.root = scene.add.container(0, 0).setScrollFactor(0).setDepth(1150).setVisible(false);
 
         const box = scene.add.graphics();
@@ -131,7 +132,7 @@ export default class StoryDialogUI {
         this.choiceBox.removeAll(true);
         const width = Math.max(...choices.map((label) => label.length)) * 10 + 64;
         const height = choices.length * 30 + 20;
-        const x = this.scene.scale.width - width - 20;
+        const x = VIEW.width - width - 20;
         const y = 330 - height;
         const panel = this.scene.add.graphics();
         panel.fillStyle(COLORS.panel, 1).fillRoundedRect(x, y, width, height, 8);

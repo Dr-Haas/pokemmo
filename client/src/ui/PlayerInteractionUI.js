@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { VIEW } from "./theme";
 
 /*
  * Panels used when two players meet:
@@ -47,7 +48,7 @@ export default class PlayerInteractionUI {
         });
 
         this.root = scene.add.container(0, 0).setScrollFactor(0).setDepth(1100).setVisible(false);
-        this.dim = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.35)
+        this.dim = scene.add.rectangle(0, 0, VIEW.width, VIEW.height, 0x000000, 0.35)
             .setOrigin(0)
             .setScrollFactor(0)
             .setInteractive()
@@ -266,8 +267,8 @@ export default class PlayerInteractionUI {
         const top = title ? 44 : 18;
         const messageHeight = messageLines.length * 18 + (messageLines.length ? 14 : 0);
         const height = top + messageHeight + options.length * lineHeight + 14;
-        const x = this.scene.scale.width - width - 24;
-        const y = this.scene.scale.height - height - 24;
+        const x = VIEW.width - width - 24;
+        const y = VIEW.height - height - 24;
 
         this.panel(x, y, width, height);
         if (title) {
@@ -319,8 +320,8 @@ export default class PlayerInteractionUI {
         const width = 420;
         const lines = this.wrap(message, 36);
         const height = 34 + lines.length * 18 + (hint ? 26 : 0);
-        const x = (this.scene.scale.width - width) / 2;
-        const y = this.scene.scale.height - height - 24;
+        const x = (VIEW.width - width) / 2;
+        const y = VIEW.height - height - 24;
         this.panel(x, y, width, height);
         lines.forEach((line, lineIndex) => this.content.add(this.text(x + 18, y + 18 + lineIndex * 18, line, 9)));
         if (hint) {
@@ -357,10 +358,10 @@ export default class PlayerInteractionUI {
         this.content.removeAll(true);
         const x = 40;
         const y = 24;
-        const width = this.scene.scale.width - 80;
-        const height = this.scene.scale.height - 48;
+        const width = VIEW.width - 80;
+        const height = VIEW.height - 48;
         this.panel(x, y, width, height);
-        this.header(x, y, width, `POKéDEX DE ${this.profileName.toUpperCase()}`);
+        this.header(x, y, width, `POKÉDEX DE ${this.profileName.toUpperCase()}`);
 
         const pokedex = this.profile?.pokedex || {};
         const seen = (pokedex.seenIds || []).length;
@@ -399,8 +400,8 @@ export default class PlayerInteractionUI {
         this.content.removeAll(true);
         const width = 560;
         const height = 300;
-        const x = (this.scene.scale.width - width) / 2;
-        const y = (this.scene.scale.height - height) / 2;
+        const x = (VIEW.width - width) / 2;
+        const y = (VIEW.height - height) / 2;
         this.panel(x, y, width, height);
         this.header(x, y, width, `BADGES DE ${this.profileName.toUpperCase()}`);
 

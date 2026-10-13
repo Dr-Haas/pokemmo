@@ -1969,6 +1969,13 @@ export function experienceForLevel(level) {
     return Math.max(0, level) ** 3;
 }
 
+/** How far a Pokémon is towards its next level, from 0 to 1 (the EXP bar). */
+export function experienceProgress(pokemon) {
+    const start = experienceForLevel(pokemon.level);
+    const next = experienceForLevel(pokemon.level + 1);
+    return Math.min(1, Math.max(0, ((pokemon.exp || 0) - start) / Math.max(1, next - start)));
+}
+
 /** Experience for beating a Pokémon, bigger against a trainer's. */
 export function experienceReward(defeated, { trainer = false } = {}) {
     const base = getCatalogEntry(defeated.id)?.baseStats;

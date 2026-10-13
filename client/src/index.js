@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { VIEW, ZOOM } from "./ui/theme";
 import { Scene1 } from "./Scene1";
 import { Scene2 } from "./Scene2";
 import { setupTouchControls } from "./touchControls";
@@ -9,11 +10,12 @@ registerServiceWorker();
 
 const Config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 450,
+    // Laid out at 800x450, drawn twice as big for sharp text (see ui/theme.js).
+    width: VIEW.width * ZOOM,
+    height: VIEW.height * ZOOM,
     parent: "game-container",
     pixelArt: true,
-    // Keep the 800x450 game and scale it to whatever screen it runs on.
+    // Scaled to whatever screen it runs on.
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { healParty, isPartyFullyHealed, setLastPokemonCenter, updatePokemonCenterState } from "./state/gameState";
+import { VIEW } from "./ui/theme";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const JOY_NAME = "Infirmière Joëlle";
@@ -157,56 +158,69 @@ export default class PokemonCenterManager {
         }
     }
 
+    // Rouge Feu style room: back wall with the Center's emblem, the nurse standing behind
+    // a waist-high counter (row 3, solid), healing machine at her side, PC on the left,
+    // cream floor with a big Poké Ball pattern.
     createInteriorDecor() {
         this.decorRoot = this.scene.add.container(0, 0).setDepth(3);
-        const baseGraphics = this.scene.add.graphics();
-        const counterFrontGraphics = this.scene.add.graphics();
+        const g = this.scene.add.graphics();
+        const front = this.scene.add.graphics();
         const width = this.scene.map.widthInPixels;
         const height = this.scene.map.heightInPixels;
+        const T = TILE_SIZE;
 
-        for (let tileY = 0; tileY < this.scene.map.height; tileY += 1) {
-            for (let tileX = 0; tileX < this.scene.map.width; tileX += 1) {
-                const color = (tileX + tileY) % 2 === 0 ? COLORS.floorA : COLORS.floorB;
-                baseGraphics.fillStyle(color, 1);
-                baseGraphics.fillRect(tileX * TILE_SIZE, tileY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
+        // Floor: cream tiles and the Poké Ball pattern in the middle
+        g.fillStyle(0xf2e6b8, 1).fillRect(0, 0, width, height);
+        g.lineStyle(1, 0xe2d29a, 1);
+        for (let x = 0; x <= width; x += T / 2) {
+            g.lineBetween(x, T * 2, x, height);
         }
+        for (let y = T * 2; y <= height; y += T / 2) {
+            g.lineBetween(0, y, width, y);
+        }
+        const ballX = width / 2;
+        const ballY = T * 6.2;
+        g.fillStyle(0xfaf2d4, 1).fillCircle(ballX, ballY, 50);
+        g.lineStyle(4, 0xe6d6a0, 1).strokeCircle(ballX, ballY, 50);
+        g.lineStyle(4, 0xe6d6a0, 1).lineBetween(ballX - 50, ballY, ballX + 50, ballY);
+        g.fillStyle(0xe6d6a0, 1).fillCircle(ballX, ballY, 14);
+        g.fillStyle(0xfaf2d4, 1).fillCircle(ballX, ballY, 9);
 
-        baseGraphics.fillStyle(COLORS.wall, 1);
-        baseGraphics.fillRect(0, 0, width, TILE_SIZE * 2);
-        baseGraphics.fillStyle(COLORS.wallBand, 1);
-        baseGraphics.fillRect(0, TILE_SIZE * 2, width, 10);
+        // Back wall: light, a red stripe at the bottom, windows and the Center's emblem
+        g.fillGradientStyle(0xfff4dc, 0xfff4dc, 0xf6deb4, 0xf6deb4, 1);
+        g.fillRect(0, 0, width, T * 2);
+        g.fillStyle(0xd85848, 1).fillRect(0, T * 2 - 12, width, 12);
+        g.fillStyle(0xf8f0e0, 1).fillRect(0, T * 2 - 14, width, 2);
+        drawWindow(g, T * 0.9, T * 0.45);
+        drawWindow(g, width - (T * 2.1), T * 0.45);
+        g.fillStyle(0xd85848, 1).fillCircle(width / 2, T * 0.75, 15);
+        g.fillStyle(0xffffff, 1).fillRect((width / 2) - 3, (T * 0.75) - 10, 6, 20);
+        g.fillRect((width / 2) - 10, (T * 0.75) - 3, 20, 6);
 
-        drawWindow(baseGraphics, TILE_SIZE * 1.1, TILE_SIZE * 0.35);
-        drawWindow(baseGraphics, width - (TILE_SIZE * 3.1), TILE_SIZE * 0.35);
+        // Floor mat at the door
+        g.fillStyle(0xc84838, 1).fillRoundedRect((width / 2) - 24, height - T + 4, 48, T - 10, 4);
 
-        baseGraphics.fillStyle(COLORS.counterTop, 1);
-        baseGraphics.fillRect(TILE_SIZE, TILE_SIZE * 3, width - (TILE_SIZE * 2), 12);
-        baseGraphics.fillStyle(0xffffff, 1);
-        baseGraphics.fillRect((width / 2) - 12, TILE_SIZE * 3 + 6, 24, 8);
-        baseGraphics.fillRect((width / 2) - 4, TILE_SIZE * 3 - 2, 8, 24);
+        this.decorRoot.add(g);
 
-        counterFrontGraphics.fillStyle(COLORS.counterFront, 1);
-        counterFrontGraphics.fillRect(TILE_SIZE, (TILE_SIZE * 3) + 12, width - (TILE_SIZE * 2), 18);
-
-        baseGraphics.fillStyle(COLORS.mat, 1);
-        baseGraphics.fillRect((width / 2) - 20, height - TILE_SIZE, 40, TILE_SIZE - 6);
-
-        this.decorRoot.add(baseGraphics);
-
-        // Behind the counter: the counter front (drawn after her) hides her legs.
-        this.joySprite = this.scene.add.image((5 * TILE_SIZE) + 16, (TILE_SIZE * 3) + 26, "players", "nurse_front.png")
+        // The nurse stands behind the counter: the counter (drawn after her) hides her legs.
+        this.joySprite = this.scene.add.image((5 * T) + 16, (T * 3) + 8, "players", "nurse_front.png")
             .setOrigin(0.5, 1)
-            .setDisplaySize(TILE_SIZE, TILE_SIZE * 2)
-            .setDepth(6);
+            .setDisplaySize(T, T * 2);
 
-        this.pcUnit = createPcUnit(this.scene, TILE_SIZE * 1.1, TILE_SIZE * 3.15);
-        this.machine = createHealingMachine(this.scene, width - (TILE_SIZE * 2.4), TILE_SIZE * 3.05);
+        // Counter on row 3: white top, red front, from the PC to the right wall
+        front.fillStyle(0x000000, 0.12).fillRect(T, (T * 4) - 2, width - (T * 2), 6);
+        front.fillStyle(0xfaf6ee, 1).fillRoundedRect(T, (T * 3) - 2, width - (T * 2), 14, 4);
+        front.fillStyle(0xe06050, 1).fillRect(T, (T * 3) + 10, width - (T * 2), 20);
+        front.fillStyle(0xc04838, 1).fillRect(T, (T * 3) + 26, width - (T * 2), 4);
+        front.fillStyle(0xf8d8c8, 1).fillRect((width / 2) - 24, (T * 3) + 15, 48, 8);
 
-        this.decorRoot.add(this.pcUnit.container);
-        this.decorRoot.add(this.machine.container);
+        this.pcUnit = createPcUnit(this.scene, T * 1.15, T * 2.35);
+        this.machine = createHealingMachine(this.scene, T * 6.4, (T * 3) - 14);
+
         this.decorRoot.add(this.joySprite);
-        this.decorRoot.add(counterFrontGraphics);
+        this.decorRoot.add(front);
+        this.decorRoot.add(this.machine.container);
+        this.decorRoot.add(this.pcUnit.container);
     }
 
     createPrompt() {
@@ -222,7 +236,7 @@ export default class PokemonCenterManager {
     createUi() {
         this.uiRoot = this.scene.add.container(0, 0).setScrollFactor(0).setDepth(1150).setVisible(false);
 
-        this.flashOverlay = this.scene.add.rectangle(0, 0, this.scene.scale.width, this.scene.scale.height, 0xffffff)
+        this.flashOverlay = this.scene.add.rectangle(0, 0, VIEW.width, VIEW.height, 0xffffff)
             .setOrigin(0)
             .setAlpha(0)
             .setScrollFactor(0)
@@ -592,25 +606,36 @@ function drawWindow(graphics, x, y) {
     graphics.fillRect(x + 20, y + 13, 14, 9);
 }
 
+// The storage PC: a tall terminal standing on the left end of the counter.
 function createPcUnit(scene, x, y) {
     const container = scene.add.container(x, y).setDepth(4);
-    const body = scene.add.rectangle(0, 0, 34, 30, COLORS.pcBody).setOrigin(0);
-    const screen = scene.add.rectangle(6, 5, 22, 10, COLORS.pcScreen).setOrigin(0);
-    const stand = scene.add.rectangle(10, 22, 14, 8, 0x304090).setOrigin(0);
-    container.add([body, screen, stand]);
+    const g = scene.add.graphics();
+    g.fillStyle(0x2c3c78, 1).fillRoundedRect(0, 0, 30, 36, 4);
+    g.fillStyle(0x4868c8, 1).fillRoundedRect(2, 2, 26, 32, 3);
+    g.fillStyle(0x88e0b0, 1).fillRect(6, 6, 18, 12);
+    g.fillStyle(0xc8f8d8, 1).fillRect(8, 8, 6, 3);
+    g.fillStyle(0x2c3c78, 1).fillRect(6, 22, 18, 3);
+    g.fillRect(6, 27, 12, 3);
+    container.add(g);
     return { container };
 }
 
+// Healing machine on the counter: six Poké Ball slots and a light.
 function createHealingMachine(scene, x, y) {
     const container = scene.add.container(x, y).setDepth(4);
-    const body = scene.add.rectangle(0, 0, 42, 26, COLORS.machineBody).setOrigin(0);
-    const light = scene.add.circle(33, 7, 4, COLORS.lightOff).setOrigin(0.5);
+    const g = scene.add.graphics();
+    g.fillStyle(0x8898a8, 1).fillRoundedRect(0, 0, 46, 26, 5);
+    g.fillStyle(0xd8e4ee, 1).fillRoundedRect(2, 2, 42, 22, 4);
+    const light = scene.add.circle(38, 7, 3, COLORS.lightOff).setOrigin(0.5);
     const slots = [
-        scene.add.circle(10, 18, 5, COLORS.slotOn),
-        scene.add.circle(21, 18, 5, COLORS.slotOn),
-        scene.add.circle(32, 18, 5, COLORS.slotOn)
+        scene.add.circle(9, 10, 4, COLORS.slotOn),
+        scene.add.circle(19, 10, 4, COLORS.slotOn),
+        scene.add.circle(29, 10, 4, COLORS.slotOn),
+        scene.add.circle(9, 19, 4, COLORS.slotOn),
+        scene.add.circle(19, 19, 4, COLORS.slotOn),
+        scene.add.circle(29, 19, 4, COLORS.slotOn)
     ];
-    container.add([body, light, ...slots]);
+    container.add([g, light, ...slots]);
     return { container, light, slots };
 }
 

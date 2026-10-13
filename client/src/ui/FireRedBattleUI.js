@@ -3,6 +3,7 @@ import {
     addMoney,
     applyExperience,
     createBattlePokemonFromCatalog,
+    experienceProgress,
     experienceReward,
     getBag,
     getBattleReadyParty,
@@ -14,15 +15,14 @@ import {
     markPokemonCaught,
     removeBagItem,
     useBagItem,
-    getEnglishSpeciesName,
     getFirstAvailablePartyIndex,
-    getPokemonBackTextureKey,
     getTrainerName,
-    getWildPokemonTextureKey,
     markPokemonSeen,
     updateParty
 } from "../state/gameState";
 import { statusLabel } from "../i18n";
+import { VIEW } from "./theme";
+import { artKey, loadPokemonArt } from "../pokemonArt";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const TYPE_COLORS = {
@@ -62,24 +62,24 @@ const COLORS = {
 const COMMANDS = [
     { id: "FIGHT", label: "ATTAQUE" },
     { id: "BAG", label: "SAC" },
-    { id: "POKEMON", label: "POKéMON" },
+    { id: "POKEMON", label: "POKÉMON" },
     { id: "RUN", label: "FUITE" }
 ];
 const LAYOUT = {
-    enemyHud: { x: 0.54, y: 0.07, width: 0.25, height: 0.17 },
+    // Opponent's box top left, as in the recent games, so it never hides the opponent.
+    enemyHud: { x: 0.05, y: 0.06, width: 0.3, height: 0.15 },
     enemySlot: { x: 0.79, y: 0.40, platformWidth: 0.23, platformHeight: 0.09 },
     playerSlot: { x: 0.26, y: 0.66, platformWidth: 0.28, platformHeight: 0.10 },
     // above the text box (it used to be hidden under it)
-    playerHud: { x: 0.56, y: 0.47, width: 0.29, height: 0.18 },
+    playerHud: { x: 0.6, y: 0.475, width: 0.34, height: 0.205 },
     messagePanel: { x: 16, y: 310, height: 124 },
     commandPanel: { width: 242, height: 124, margin: 16 },
     partyPanel: { x: 64, y: 48, width: 672, height: 340 }
 };
-// Sprites are 96 px with empty margins: one scale for all, so a Roucool stays smaller
-// than an Onix, capped so the biggest ones still fit.
+// Largest size of a Pokémon in battle; smaller species are shown smaller (see fitSprite).
 const BATTLE_SPRITE_BOUNDS = {
-    enemy: { scale: 1.75, maxWidth: 190, maxHeight: 150 },
-    player: { scale: 2, maxWidth: 230, maxHeight: 170 }
+    enemy: { maxWidth: 170, maxHeight: 150 },
+    player: { maxWidth: 215, maxHeight: 180 }
 };
 const DAMAGE_VARIANCE_MIN = 0.85;
 const DAMAGE_VARIANCE_MAX = 1;
@@ -174,16 +174,8 @@ export default class FireRedBattleUI {
 
         markPokemonSeen(wildPokemon.id);
 
-        await this.ensurePokemonTexture(
-            getWildPokemonTextureKey(wildPokemon.id),
-            getAnimatedSpriteUrl(wildPokemon, "enemy"),
-            wildPokemon.sprite
-        );
-        await this.ensurePokemonTexture(
-            getPokemonBackTextureKey(party[activePartyIndex].id),
-            getAnimatedSpriteUrl(party[activePartyIndex], "player"),
-            party[activePartyIndex].backSprite
-        );
+        await this.loadArt(wildPokemon);
+        await this.loadArt(party[activePartyIndex]);
 
         this.battle = {
             party,
@@ -223,13 +215,9 @@ export default class FireRedBattleUI {
 
         for (const enemy of enemies) {
             markPokemonSeen(enemy.id);
-            await this.ensurePokemonTexture(getWildPokemonTextureKey(enemy.id), getAnimatedSpriteUrl(enemy, "enemy"), enemy.sprite);
+            await this.loadArt(enemy);
         }
-        await this.ensurePokemonTexture(
-            getPokemonBackTextureKey(party[activePartyIndex].id),
-            getAnimatedSpriteUrl(party[activePartyIndex], "player"),
-            party[activePartyIndex].backSprite
-        );
+        await this.loadArt(party[activePartyIndex]);
 
         this.battle = {
             party,
@@ -294,14 +282,18 @@ export default class FireRedBattleUI {
     }
 
     createUi() {
-        const width = this.scene.scale.width;
-        const height = this.scene.scale.height;
+        const width = VIEW.width;
+        const height = VIEW.height;
         const commandX = width - LAYOUT.commandPanel.width - LAYOUT.commandPanel.margin;
         const messageWidth = commandX - (LAYOUT.messagePanel.x * 2);
 
         this.root = this.scene.add.container(0, 0).setScrollFactor(0).setDepth(1200).setVisible(false);
 
-        this.background = this.scene.add.rectangle(0, 0, width, height, COLORS.fieldBackground).setOrigin(0);
+        this.background = this.scene.add.graphics();
+        this.background.fillGradientStyle(0x9fd8f8, 0x9fd8f8, 0xd8f0c0, 0xd8f0c0, 1);
+        this.background.fillRect(0, 0, width, height * 0.55);
+        this.background.fillGradientStyle(0xc8e8a0, 0xc8e8a0, 0x98cc78, 0x98cc78, 1);
+        this.background.fillRect(0, height * 0.55, width, height * 0.45);
         this.flashOverlay = this.scene.add.rectangle(0, 0, width, height, COLORS.flash).setOrigin(0).setAlpha(0);
         this.typeOverlay = this.scene.add.rectangle(0, 0, width, height, COLORS.flash).setOrigin(0).setAlpha(0);
 
@@ -317,7 +309,7 @@ export default class FireRedBattleUI {
             this.createText(LAYOUT.messagePanel.x + 18, LAYOUT.messagePanel.y + 46, "", 10),
             this.createText(LAYOUT.messagePanel.x + 18, LAYOUT.messagePanel.y + 74, "", 10)
         ];
-        this.messageCursor = this.createText(LAYOUT.messagePanel.x + messageWidth - 18, LAYOUT.messagePanel.y + LAYOUT.messagePanel.height - 26, "▌", 12, COLORS.cursor).setOrigin(1, 0);
+        this.messageCursor = this.createText(LAYOUT.messagePanel.x + messageWidth - 18, LAYOUT.messagePanel.y + LAYOUT.messagePanel.height - 26, "▼", 10, "#e03030").setOrigin(1, 0);
 
         this.commandPanel = this.createPanel(commandX, LAYOUT.messagePanel.y, LAYOUT.commandPanel.width, LAYOUT.commandPanel.height);
         this.commandCursor = this.createText(commandX + 16, LAYOUT.messagePanel.y + 42, "►", 10, COLORS.cursor);
@@ -335,7 +327,7 @@ export default class FireRedBattleUI {
 
         this.partyPanel = this.createPanel(LAYOUT.partyPanel.x, LAYOUT.partyPanel.y, LAYOUT.partyPanel.width, LAYOUT.partyPanel.height);
         this.partyPanel.setVisible(false);
-        this.partyTitle = this.createText(LAYOUT.partyPanel.x + 18, LAYOUT.partyPanel.y + 18, "CHOISIS UN POKéMON", 10);
+        this.partyTitle = this.createText(LAYOUT.partyPanel.x + 18, LAYOUT.partyPanel.y + 18, "CHOISIS UN POKÉMON", 10);
         this.partyCursor = this.createText(LAYOUT.partyPanel.x + 20, LAYOUT.partyPanel.y + 62, "►", 10, COLORS.cursor);
         this.partyEntryLabels = Array.from({ length: 6 }, (_, index) => this.createText(
             LAYOUT.partyPanel.x + 44,
@@ -377,7 +369,7 @@ export default class FireRedBattleUI {
      * message box does the same as moving the cursor there and pressing A.
      */
     createTouchTargets() {
-        const width = this.scene.scale.width;
+        const width = VIEW.width;
         const commandX = width - LAYOUT.commandPanel.width - LAYOUT.commandPanel.margin;
         const zone = (x, y, w, h, onTap) => {
             // scrollFactor 0 on the object itself, so taps line up while the camera follows the player
@@ -401,7 +393,7 @@ export default class FireRedBattleUI {
             }
         });
 
-        // FIGHT / BAG / POKéMON / RUN (2 x 2 grid)
+        // FIGHT / BAG / POKÉMON / RUN (2 x 2 grid)
         this.touchCommandZones = COMMANDS.map((command, index) => zone(
             commandX + 8 + ((index % 2) * 116),
             LAYOUT.messagePanel.y + 26 + (Math.floor(index / 2) * 40),
@@ -466,18 +458,30 @@ export default class FireRedBattleUI {
 
     createStatusPanel(x, y, width, height, showHpValue) {
         const container = this.scene.add.container(x, y);
-        const shadow = this.scene.add.rectangle(4, 4, width, height, COLORS.panelShadow).setOrigin(0);
-        const background = this.scene.add.rectangle(0, 0, width, height, COLORS.panelBackground).setOrigin(0);
-        background.setStrokeStyle(3, COLORS.panelBorder);
-        const name = this.createText(14, 12, "", 10);
-        const level = this.createText(width - 14, 12, "", 8).setOrigin(1, 0);
-        const hpLabel = this.createText(14, height - 30, "PV", 8);
-        const hpValue = this.createText(width - 14, height - 30, "", 8).setOrigin(1, 0);
-        const hpBarBackground = this.scene.add.rectangle(54, height - 20, width - 82, 8, COLORS.hpBackground).setOrigin(0, 0.5);
-        const hpBarFill = this.scene.add.rectangle(54, height - 20, width - 82, 8, COLORS.hpGreen).setOrigin(0, 0.5);
+        const box = this.scene.add.graphics();
+        box.fillStyle(0x000000, 0.18).fillRoundedRect(3, 5, width, height, 12);
+        box.fillStyle(0xffffff, 0.94).fillRoundedRect(0, 0, width, height, 12);
+        box.lineStyle(2, 0x5a7088, 1).strokeRoundedRect(0, 0, width, height, 12);
+        const name = this.createText(14, 8, "", 10);
+        const level = this.createText(width - 14, 10, "", 8).setOrigin(1, 0);
+        const barY = showHpValue ? 40 : height - 18;
+        const hpLabel = this.createText(14, barY - 9, "PV", 7, "#e07020");
+        const hpValue = this.createText(width - 14, barY + 8, "", 8).setOrigin(1, 0).setVisible(showHpValue);
+        const hpBarBackground = this.scene.add.rectangle(44, barY, width - 58, 8, 0x485868).setOrigin(0, 0.5);
+        const hpBarFill = this.scene.add.rectangle(44, barY, width - 58, 8, COLORS.hpGreen).setOrigin(0, 0.5);
 
-        container.add([shadow, background, name, level, hpLabel, hpValue, hpBarBackground, hpBarFill]);
+        container.add([box, name, level, hpLabel, hpValue, hpBarBackground, hpBarFill]);
+
+        // Your own Pokémon also shows its EXP bar, under the HP.
+        let expBarFill = null;
+        if (showHpValue) {
+            const expLabel = this.createText(14, height - 17, "EXP", 5, "#2878c8");
+            const expBarBackground = this.scene.add.rectangle(44, height - 10, width - 58, 5, 0xc8d0d8).setOrigin(0, 0.5);
+            expBarFill = this.scene.add.rectangle(44, height - 10, width - 58, 5, 0x48a0f0).setOrigin(0, 0.5);
+            container.add([expLabel, expBarBackground, expBarFill]);
+        }
         return {
+            expBarFill,
             container,
             width,
             height,
@@ -488,17 +492,18 @@ export default class FireRedBattleUI {
             hpValue,
             hpBarBackground,
             hpBarFill,
-            barWidth: width - 82,
+            barWidth: width - 58,
             renderedHp: 0
         };
     }
 
     createPanel(x, y, width, height) {
         const container = this.scene.add.container(x, y);
-        const shadow = this.scene.add.rectangle(4, 4, width, height, COLORS.panelShadow).setOrigin(0);
-        const background = this.scene.add.rectangle(0, 0, width, height, COLORS.panelBackground).setOrigin(0);
-        background.setStrokeStyle(3, COLORS.panelBorder);
-        container.add([shadow, background]);
+        const box = this.scene.add.graphics();
+        box.fillStyle(0x000000, 0.2).fillRoundedRect(3, 5, width, height, 14);
+        box.fillStyle(0xffffff, 0.96).fillRoundedRect(0, 0, width, height, 14);
+        box.lineStyle(3, 0x5a7088, 1).strokeRoundedRect(0, 0, width, height, 14);
+        container.add(box);
         return container;
     }
 
@@ -554,8 +559,8 @@ export default class FireRedBattleUI {
 
         const activePokemon = this.battle.party[this.battle.activePartyIndex];
         this.root.setVisible(true);
-        this.syncSlotVisual(this.enemySlot, this.battle.wildPokemon, getWildPokemonTextureKey(this.battle.wildPokemon.id), "enemy");
-        this.syncSlotVisual(this.playerSlot, activePokemon, getPokemonBackTextureKey(activePokemon.id), "player");
+        this.syncSlotVisual(this.enemySlot, this.battle.wildPokemon, artKey(this.battle.wildPokemon.id), "enemy");
+        this.syncSlotVisual(this.playerSlot, activePokemon, artKey(activePokemon.id), "player");
 
         if (resetSprites) {
             this.resetVisualState();
@@ -587,7 +592,7 @@ export default class FireRedBattleUI {
         const showParty = this.phase === "party" || showBag;
         this.partyPanel.setVisible(showParty);
         this.partyTitle.setVisible(showParty);
-        this.partyTitle.setText(showBag ? "SAC" : "CHOISIS UN POKéMON");
+        this.partyTitle.setText(showBag ? "SAC" : "CHOISIS UN POKÉMON");
         this.partyCursor.setVisible(showParty && this.blinkVisible);
         this.partyFooter.setVisible(showParty);
         this.partyEntryLabels.forEach((label, index) => {
@@ -635,9 +640,10 @@ export default class FireRedBattleUI {
             slot.sprite.setVisible(false);
         }
 
-        fitSprite(slot.sprite, BATTLE_SPRITE_BOUNDS[boundsKey]);
+        slot.sprite.setFlipX(slot.side === "player");
+        fitSprite(slot.sprite, BATTLE_SPRITE_BOUNDS[boundsKey], pokemon);
         slot.sprite.setPosition(slot.baseX, slot.baseY);
-        slot.platform.setPosition(slot.baseX, slot.side === "enemy" ? this.scene.scale.height * LAYOUT.enemySlot.y : this.scene.scale.height * LAYOUT.playerSlot.y);
+        slot.platform.setPosition(slot.baseX, slot.side === "enemy" ? VIEW.height * LAYOUT.enemySlot.y : VIEW.height * LAYOUT.playerSlot.y);
         slot.sprite.clearTint();
         slot.sprite.setAlpha(pokemon.stats.hp > 0 ? 1 : 0);
         slot.platform.setAlpha(pokemon.stats.hp > 0 ? 1 : 0);
@@ -661,13 +667,21 @@ export default class FireRedBattleUI {
         const hpColor = getHpColor(hpPercent);
         panel.hpBarFill.width = barWidth;
         panel.hpBarFill.setFillStyle(hpColor);
+
+        // While experience is being gained, gainExperience() animates the bar itself.
+        if (panel.expBarFill && !panel.animatingExp) {
+            panel.expBarFill.width = Math.round(panel.barWidth * experienceProgress(pokemon));
+        }
     }
 
     refreshMessage() {
-        const currentMessage = this.messageQueue.length
+        let currentMessage = this.messageQueue.length
             ? this.messageQueue[this.messagePage] || ""
             : this.currentLogMessage;
-        const wrapped = wrapMessage(currentMessage, 34, 3);
+        if (this.phase === "command" && this.battle) {
+            currentMessage = `Que doit faire ${this.battle.party[this.battle.activePartyIndex].name} ?`;
+        }
+        const wrapped = wrapMessage(currentMessage, 46, 3);
         this.messageLines.forEach((line, index) => {
             line.setText(wrapped[index] || "");
         });
@@ -678,10 +692,10 @@ export default class FireRedBattleUI {
             return;
         }
 
-        const width = this.scene.scale.width;
+        const width = VIEW.width;
         const commandX = width - LAYOUT.commandPanel.width - LAYOUT.commandPanel.margin;
 
-        this.messageCursor.setVisible(this.blinkVisible && this.visible);
+        this.messageCursor.setVisible(this.blinkVisible && this.visible && this.phase === "message");
         if (this.phase === "command") {
             this.commandCursor.setVisible(this.blinkVisible);
             this.commandCursor.setPosition(commandX + 16 + ((this.commandIndex % 2) * 104), LAYOUT.messagePanel.y + 42 + (Math.floor(this.commandIndex / 2) * 32));
@@ -939,11 +953,7 @@ export default class FireRedBattleUI {
         }
 
         this.phase = "busy";
-        await this.ensurePokemonTexture(
-            getPokemonBackTextureKey(nextPokemon.id),
-            getAnimatedSpriteUrl(nextPokemon, "player"),
-            nextPokemon.backSprite
-        );
+        await this.loadArt(nextPokemon);
         this.battle.activePartyIndex = nextIndex;
         this.refreshBattleView(true);
         await this.animateSendOut(this.playerSlot);
@@ -1078,11 +1088,7 @@ export default class FireRedBattleUI {
             const nextIndex = getFirstAvailablePartyIndex(this.battle.party);
             if (nextIndex >= 0) {
                 const nextPokemon = this.battle.party[nextIndex];
-                await this.ensurePokemonTexture(
-                    getPokemonBackTextureKey(nextPokemon.id),
-                    getAnimatedSpriteUrl(nextPokemon, "player"),
-                    nextPokemon.backSprite
-                );
+                await this.loadArt(nextPokemon);
                 this.battle.activePartyIndex = nextIndex;
                 this.refreshBattleView(true);
                 await this.animateSendOut(this.playerSlot);
@@ -1353,12 +1359,28 @@ export default class FireRedBattleUI {
             return;
         }
         const amount = experienceReward(defeated, { trainer: Boolean(this.battle.trainer) });
+        const panel = this.playerInfo;
+        let from = experienceProgress(pokemon);
         const levels = applyExperience(pokemon, amount);
-        await this.showBattleLog(`${pokemon.name} gagne ${amount} points d'expérience !`, 700);
+
+        // The EXP bar fills up; each new level empties it and starts again.
+        panel.animatingExp = true;
+        const fillTo = (to) => this.counterTween(from * 100, to * 100, 500, (value) => {
+            panel.expBarFill.width = Math.round(panel.barWidth * (value / 100));
+        });
+        this.currentLogMessage = `${pokemon.name} gagne ${amount} points d'expérience !`;
+        this.refreshMessage();
         for (const level of levels) {
-            this.renderStatus(this.playerInfo, pokemon);
+            await fillTo(1);
+            from = 0;
+            panel.level.setText(`N.${level}`);
+            this.renderStatus(panel, pokemon);
             await this.showBattleLog(`${pokemon.name} monte au niveau ${level} !`, 800);
         }
+        await fillTo(experienceProgress(pokemon));
+        panel.animatingExp = false;
+        this.renderStatus(panel, pokemon);
+        await this.wait(400);
     }
 
     endBattle() {
@@ -1398,27 +1420,9 @@ export default class FireRedBattleUI {
         this.typeOverlay.setAlpha(0);
     }
 
-    async ensurePokemonTexture(key, primaryUrl, fallbackUrl) {
-        if (this.scene.textures.exists(key)) {
-            return true;
-        }
-
-        const resolvedUrl = await resolveSpriteUrl(primaryUrl, fallbackUrl);
-        if (!resolvedUrl) {
-            return false;
-        }
-
-        const load = (url) => new Promise((resolve) => {
-            this.scene.load.image(key, url);
-            this.scene.load.once(Phaser.Loader.Events.COMPLETE, resolve);
-            this.scene.load.start();
-        });
-
-        await load(resolvedUrl);
-        if (!this.scene.textures.exists(key) && fallbackUrl && fallbackUrl !== resolvedUrl) {
-            await load(fallbackUrl);
-        }
-        return this.scene.textures.exists(key);
+    // HD picture of a Pokémon (see pokemonArt.js); yours is shown mirrored, facing the opponent.
+    loadArt(pokemon) {
+        return loadPokemonArt(this.scene, pokemon.id, pokemon.sprite);
     }
 
     tween(config) {
@@ -1590,12 +1594,14 @@ function wrapMessage(message, width, maxLines) {
     return lines.slice(0, maxLines);
 }
 
-function fitSprite(sprite, bounds) {
+function fitSprite(sprite, bounds, pokemon) {
     // The frame, not the whole image (a texture can be an atlas).
     const width = sprite.frame?.realWidth || 1;
     const height = sprite.frame?.realHeight || 1;
     const content = visibleBounds(sprite);
-    const scale = Math.min(bounds.scale, bounds.maxWidth / content.width, bounds.maxHeight / content.height);
+    // HD pictures all fill their frame: a Roucool (0.3 m) is drawn smaller than an Onix (8.8 m).
+    const sizeFactor = Phaser.Math.Clamp(0.62 + ((pokemon?.height || 1) * 0.18), 0.62, 1);
+    const scale = Math.min(bounds.maxWidth / content.width, bounds.maxHeight / content.height) * sizeFactor;
 
     sprite.setDisplaySize(Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)));
     // Feet on the platform: the bottom of the visible pixels sits at the sprite's position.
@@ -1660,49 +1666,3 @@ function getHpColor(percent) {
     return COLORS.hpRed;
 }
 
-function normalizeShowdownName(name) {
-    return (name || "")
-        .toLowerCase()
-        .replace(/♀/g, "f")
-        .replace(/♂/g, "m")
-        .replace(/['’.:\s-]/g, "")
-        .replace("mrmime", "mrmime")
-        .replace("farfetchd", "farfetchd")
-        .replace("nidoranf", "nidoranf")
-        .replace("nidoranm", "nidoranm");
-}
-
-function getAnimatedSpriteUrl(pokemon, side) {
-    // Showdown sprites are named after the English species name, whatever language is shown in game.
-    const normalizedName = normalizeShowdownName(getEnglishSpeciesName(pokemon?.id) || pokemon?.name);
-    const base = side === "player"
-        ? "https://play.pokemonshowdown.com/sprites/gen5ani-back"
-        : "https://play.pokemonshowdown.com/sprites/gen5ani";
-    return `${base}/${normalizedName}.gif`;
-}
-
-async function resolveSpriteUrl(primaryUrl, fallbackUrl) {
-    const urls = [primaryUrl, fallbackUrl].filter(Boolean);
-    for (const url of urls) {
-        const canLoad = await canLoadImage(url);
-        if (canLoad) {
-            return url;
-        }
-    }
-    return null;
-}
-
-// The game loads sprites with fetch, so a server must allow it (CORS): an <img> that only
-// displays fine (Showdown's GIFs) would leave the Pokémon without a picture.
-function canLoadImage(url) {
-    return new Promise((resolve) => {
-        const image = new Image();
-        image.crossOrigin = "anonymous";
-        image.onload = () => resolve(true);
-        image.onerror = () => resolve(false);
-        image.src = url;
-    });
-}
-
-// Shared with the PvP battle screen.
-export { getAnimatedSpriteUrl };

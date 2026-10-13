@@ -18,6 +18,7 @@ import PlayersAtlasPNG from "./assets/images/players/players.png";
 import { getPlayerData, getPokemonSpriteEntries, initializeGameState, setTrainerName, updatePlayerPosition } from "./state/gameState";
 import { nameReady, getPlayerName } from "./SocketServer";
 import { createCharacterAnimations } from "./characters";
+import { ZOOM } from "./ui/theme";
 
 // Bumped when the world map is redrawn: older saved positions no longer make sense.
 const KANTO_LAYOUT = 2;
@@ -47,8 +48,8 @@ export class Scene1 extends Phaser.Scene {
     }
 
     create() {
+        this.cameras.main.setOrigin(0, 0).setZoom(ZOOM);
         this.loadingText = this.add.text(20, 20, "Chargement du jeu...", {
-            fontFamily: "\"Press Start 2P\", monospace",
             fontSize: "12px",
             color: "#ffffff"
         });
@@ -207,7 +208,7 @@ function waitForPixelFont() {
     }
 
     return Promise.all([
-        document.fonts.load("10px \"Press Start 2P\""),
+        document.fonts.load("800 15px \"Nunito\""),
         document.fonts.ready
     ]).catch(() => undefined);
 }

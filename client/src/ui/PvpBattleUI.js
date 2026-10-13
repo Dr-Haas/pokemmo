@@ -1,6 +1,5 @@
 import Phaser from "phaser";
-import FireRedBattleUI, { getAnimatedSpriteUrl } from "./FireRedBattleUI";
-import { getPokemonBackTextureKey, getWildPokemonTextureKey } from "../state/gameState";
+import FireRedBattleUI from "./FireRedBattleUI";
 
 /*
  * Battle screen for player vs player.
@@ -15,7 +14,7 @@ export default class PvpBattleUI extends FireRedBattleUI {
         this.sendChoice = sendChoice;
         this.forfeitBattle = forfeit;
         this.root.setDepth(1250);
-        // FIGHT / BAG / POKéMON / RUN -> run means giving up here.
+        // FIGHT / BAG / POKÉMON / RUN -> run means giving up here.
         this.commandLabels[3].setText("ABANDON");
     }
 
@@ -396,19 +395,11 @@ export default class PvpBattleUI extends FireRedBattleUI {
     /* ------------------------------------------------------------------ */
 
     loadFront(pokemon) {
-        return this.ensurePokemonTexture(
-            getWildPokemonTextureKey(pokemon.id),
-            getAnimatedSpriteUrl(pokemon, "enemy"),
-            pokemon.sprite
-        );
+        return this.loadArt(pokemon);
     }
 
     loadBack(pokemon) {
-        return this.ensurePokemonTexture(
-            getPokemonBackTextureKey(pokemon.id),
-            getAnimatedSpriteUrl(pokemon, "player"),
-            pokemon.backSprite || pokemon.sprite
-        );
+        return this.loadArt(pokemon);
     }
 }
 
