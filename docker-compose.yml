@@ -30,6 +30,7 @@ services:
       - "443:443"
     environment:
       - DOMAIN=${DOMAIN}
+      - REDIRECT_FROM=${REDIRECT_FROM:-http://redirect.localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

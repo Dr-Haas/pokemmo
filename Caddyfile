@@ -2,3 +2,8 @@
 	encode gzip
 	reverse_proxy game:3000
 }
+
+# Other addresses (www, an older link) send players to the main one, keeping ?code=...
+{$REDIRECT_FROM:http://redirect.localhost} {
+	redir https://{$DOMAIN}{uri} permanent
+}

@@ -50,6 +50,7 @@ Le jeu a besoin d'un serveur Node qui tourne en continu avec des WebSockets : il
    git clone <url-du-depot-prive> pokemmo && cd pokemmo
    cp .env.example .env
    nano .env            # DOMAIN=pokemmo.mondomaine.fr, GAME_CODE=$(openssl rand -hex 6)
+                        # REDIRECT_FROM=www.pokemmo.mondomaine.fr (facultatif, redirigé vers DOMAIN)
    docker compose up -d --build
    ```
 4. Ouvrir `https://pokemmo.mondomaine.fr/?code=<GAME_CODE>`. Caddy obtient le certificat HTTPS tout seul (ports 80 et 443 ouverts dans le pare-feu Hostinger).
