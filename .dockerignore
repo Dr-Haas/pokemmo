@@ -4,3 +4,4 @@ client/dist
 server/.env
 server/.molroo-npc-cache.json
 docs
+.env

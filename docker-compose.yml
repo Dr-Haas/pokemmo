@@ -1,0 +1,36 @@
+# Hostinger VPS (or any Linux server with Docker).
+# Caddy gets the HTTPS certificate automatically and forwards everything
+# (pages + WebSocket) to the game server.
+#
+#   cp .env.example .env   # then fill in DOMAIN and GAME_CODE
+#   docker compose up -d --build
+services:
+  game:
+    build: .
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+      - GAME_CODE=${GAME_CODE:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - MOLROO_API_KEY=${MOLROO_API_KEY:-}
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - game
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

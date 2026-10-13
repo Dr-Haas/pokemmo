@@ -39,6 +39,23 @@ Le code est mémorisé sur leur téléphone après la première ouverture.
 
 À savoir sur l'offre gratuite : le serveur s'endort après 15 min sans joueur, le premier qui se connecte attend environ 1 minute le temps du réveil. L'offre à 7 $/mois supprime ça. Fly.io ou Railway marchent aussi avec le même `Dockerfile`.
 
+## Mettre en ligne (Hostinger VPS)
+
+Le jeu a besoin d'un serveur Node qui tourne en continu avec des WebSockets : il faut un **VPS** Hostinger (KVM 1 suffit), pas l'hébergement web mutualisé.
+
+1. Créer le VPS avec le modèle **Ubuntu 24.04 with Docker** (ou installer Docker : `curl -fsSL https://get.docker.com | sh`).
+2. Chez le registrar du domaine : un enregistrement **A** `pokemmo.mondomaine.fr` → IP du VPS.
+3. Sur le VPS :
+   ```bash
+   git clone <url-du-depot-prive> pokemmo && cd pokemmo
+   cp .env.example .env
+   nano .env            # DOMAIN=pokemmo.mondomaine.fr, GAME_CODE=$(openssl rand -hex 6)
+   docker compose up -d --build
+   ```
+4. Ouvrir `https://pokemmo.mondomaine.fr/?code=<GAME_CODE>`. Caddy obtient le certificat HTTPS tout seul (ports 80 et 443 ouverts dans le pare-feu Hostinger).
+
+Mettre à jour : `git pull && docker compose up -d --build`. Logs : `docker compose logs -f game`.
+
 ## Installer sur le téléphone
 
 - **iPhone (Safari)** : bouton Partager > *Sur l'écran d'accueil*.
