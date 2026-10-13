@@ -50,9 +50,15 @@
         color: var(--ink);
       }
 
+      /* Only the part of the screen that is always visible: Safari's toolbar can float
+         over the page, so the full height ("inset: 0") would hide the bottom of the game. */
       #game-container {
         position: fixed;
-        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100vh;
+        height: 100svh;
       }
 
       canvas {

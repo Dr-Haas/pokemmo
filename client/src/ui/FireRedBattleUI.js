@@ -20,7 +20,7 @@ import {
     markPokemonSeen,
     updateParty
 } from "../state/gameState";
-import { statusLabel } from "../i18n";
+import { statusLabel, typeLabel } from "../i18n";
 import { VIEW } from "./theme";
 import { artKey, loadPokemonArt } from "../pokemonArt";
 
@@ -680,6 +680,13 @@ export default class FireRedBattleUI {
             : this.currentLogMessage;
         if (this.phase === "command" && this.battle) {
             currentMessage = `Que doit faire ${this.battle.party[this.battle.activePartyIndex].name} ?`;
+        }
+        // Choosing an attack: its PP and type, as in the games.
+        if (this.phase === "moves" && this.battle) {
+            const move = this.battle.party[this.battle.activePartyIndex].moves[this.moveIndex];
+            if (move) {
+                currentMessage = `${move.displayName} · PP ${move.currentPp}/${move.maxPp} · Type ${typeLabel(move.type)}`;
+            }
         }
         const wrapped = wrapMessage(currentMessage, 46, 3);
         this.messageLines.forEach((line, index) => {
@@ -1491,13 +1498,14 @@ export default class FireRedBattleUI {
         if (move.currentPp <= 0) {
             return "#8a8a8a";
         }
+        // Dark text on the white panel; orange then red when PP run low.
         if (ppRatio <= 0.25) {
-            return "#f83800";
+            return "#d83018";
         }
         if (ppRatio <= 0.5) {
-            return "#f8d800";
+            return "#d08000";
         }
-        return "#ffffff";
+        return COLORS.text;
     }
 }
 

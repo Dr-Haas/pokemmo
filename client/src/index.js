@@ -31,6 +31,20 @@ const Config = {
 
 const game = new Phaser.Game(Config);
 
+// Phones: follow the visible area when the browser's toolbars appear or hide.
+if (window.visualViewport) {
+    const fitVisibleArea = () => {
+        const container = document.getElementById("game-container");
+        if (container) {
+            container.style.height = `${Math.round(window.visualViewport.height)}px`;
+        }
+        game.scale.refresh();
+    };
+    window.visualViewport.addEventListener("resize", fitVisibleArea);
+    window.addEventListener("orientationchange", () => setTimeout(fitVisibleArea, 300));
+    fitVisibleArea();
+}
+
 // Handy for debugging from the browser console.
 window.__game = game;
 
