@@ -1,11 +1,11 @@
 const GAME_STATE_STORAGE_KEY = "pokemmo.game-state.v3";
 const POKEMON_CACHE_STORAGE_KEY = "pokemmo.pokemon-cache.v3";
-const MOVE_CACHE_STORAGE_KEY = "pokemmo.move-cache.v2";
+const MOVE_CACHE_STORAGE_KEY = "pokemmo.move-cache.v3";
 const SAVE_SLOT_PREFIX = "save_slot_";
 const SAVE_DATA_VERSION = 1;
 
 const DEFAULT_TRAINER_NAME = "LANDON";
-const DEFAULT_RIVAL_NAME = "BLUE";
+const DEFAULT_RIVAL_NAME = "REGIS";
 const DEFAULT_PLAYER_ID = 12345;
 const DEFAULT_MONEY = 3000;
 const DEFAULT_SAVE_SLOT = 1;
@@ -13,8 +13,10 @@ const DEFAULT_BOX_COUNT = 14;
 const DEFAULT_BOX_CAPACITY = 30;
 const KANTO_GENERATION_ID = 1;
 const KANTO_TARGET_COUNT = 151;
-const SUPPORTED_POKEDEX_LANGUAGES = ["en", "de"];
-const POKEMON_CACHE_LOCALIZATION_VERSION = 1;
+const SUPPORTED_POKEDEX_LANGUAGES = ["fr", "en", "de"];
+const DEFAULT_LANGUAGE = "fr";
+// Bumped when a language is added, so caches built without it are refetched.
+const POKEMON_CACHE_LOCALIZATION_VERSION = 2;
 
 const DEFAULT_OPTIONS = {
     textSpeed: "fast",
@@ -22,7 +24,7 @@ const DEFAULT_OPTIONS = {
     battleStyle: "shift",
     sound: "stereo",
     buttonMode: "normal",
-    pokedexLanguage: "en"
+    pokedexLanguage: DEFAULT_LANGUAGE
 };
 
 const DEFAULT_PLAYER_STATE = {
@@ -93,14 +95,14 @@ const PARTY_SEED = [
 ];
 
 const BADGE_NAMES = [
-    "Boulder Badge",
-    "Cascade Badge",
-    "Thunder Badge",
-    "Rainbow Badge",
-    "Soul Badge",
-    "Marsh Badge",
-    "Volcano Badge",
-    "Earth Badge"
+    "Badge Roche",
+    "Badge Cascade",
+    "Badge Foudre",
+    "Badge Prisme",
+    "Badge Âme",
+    "Badge Marais",
+    "Badge Volcan",
+    "Badge Terre"
 ];
 
 const BAG_CATEGORIES = ["Items", "Poké Balls", "TM/HM", "Berries", "Key Items"];
@@ -113,7 +115,7 @@ const BAG_ITEM_SEED = [
         quantity: 5,
         holdable: false,
         effect: { type: "heal_hp", value: 20 },
-        desc: "Herstelt 20 HP van een Pokémon."
+        desc: "Restaure 20 PV d'un Pokémon."
     },
     {
         id: "super-potion",
@@ -122,7 +124,7 @@ const BAG_ITEM_SEED = [
         quantity: 2,
         holdable: false,
         effect: { type: "heal_hp", value: 50 },
-        desc: "Herstelt 50 HP van een Pokémon."
+        desc: "Restaure 50 PV d'un Pokémon."
     },
     {
         id: "antidote",
@@ -131,43 +133,43 @@ const BAG_ITEM_SEED = [
         quantity: 2,
         holdable: false,
         effect: { type: "heal_status", status: "PSN" },
-        desc: "Geneest vergiftiging."
+        desc: "Soigne l'empoisonnement."
     },
     {
         id: "burn-heal",
-        name: "Burn Heal",
+        name: "Anti-Brûle",
         category: "Items",
         quantity: 1,
         holdable: false,
         effect: { type: "heal_status", status: "BRN" },
-        desc: "Geneest brandwonden."
+        desc: "Soigne une brûlure."
     },
     {
         id: "paralyze-heal",
-        name: "Paralyze Heal",
+        name: "Anti-Para",
         category: "Items",
         quantity: 1,
         holdable: false,
         effect: { type: "heal_status", status: "PAR" },
-        desc: "Geneest verlamming."
+        desc: "Soigne la paralysie."
     },
     {
         id: "awakening",
-        name: "Awakening",
+        name: "Réveil",
         category: "Items",
         quantity: 1,
         holdable: false,
         effect: { type: "heal_status", status: "SLP" },
-        desc: "Maakt een slapende Pokémon wakker."
+        desc: "Réveille un Pokémon endormi."
     },
     {
         id: "revive",
-        name: "Revive",
+        name: "Rappel",
         category: "Items",
         quantity: 1,
         holdable: false,
         effect: { type: "revive" },
-        desc: "Brengt een fainted Pokémon terug met half HP."
+        desc: "Ranime un Pokémon K.O. avec la moitié de ses PV."
     },
     {
         id: "poke-ball",
@@ -176,79 +178,79 @@ const BAG_ITEM_SEED = [
         quantity: 10,
         holdable: false,
         effect: { type: "capture" },
-        desc: "Een capsule om wilde Pokémon te vangen."
+        desc: "Une capsule pour attraper les Pokémon sauvages."
     },
     {
         id: "great-ball",
-        name: "Great Ball",
+        name: "Super Ball",
         category: "Poké Balls",
         quantity: 3,
         holdable: false,
         effect: { type: "capture" },
-        desc: "Betere vangstkans dan een Poké Ball."
+        desc: "Meilleur taux de capture qu'une Poké Ball."
     },
     {
         id: "tm35",
-        name: "TM35 Flamethrower",
+        name: "CT35 Lance-Flammes",
         category: "TM/HM",
         quantity: 1,
         holdable: false,
         effect: { type: "tm", value: MOVE_IDS.flamethrower },
-        desc: "Leert FLAMETHROWER aan compatibele Pokémon."
+        desc: "Apprend LANCE-FLAMMES à un Pokémon compatible."
     },
     {
         id: "hm02",
-        name: "HM02 Fly",
+        name: "CS02 Vol",
         category: "TM/HM",
         quantity: 1,
         holdable: false,
         effect: { type: "tm", value: MOVE_IDS.fly },
-        desc: "Leert FLY aan compatibele Pokémon."
+        desc: "Apprend VOL à un Pokémon compatible."
     },
     {
         id: "oran-berry",
-        name: "Oran Berry",
+        name: "Baie Oran",
         category: "Berries",
         quantity: 3,
         holdable: true,
         effect: { type: "heal_hp", value: 10 },
-        desc: "Een bes die 10 HP herstelt."
+        desc: "Une baie qui restaure 10 PV."
     },
     {
         id: "pecha-berry",
-        name: "Pecha Berry",
+        name: "Baie Pêcha",
         category: "Berries",
         quantity: 2,
         holdable: true,
         effect: { type: "heal_status", status: "PSN" },
-        desc: "Een bes die vergiftiging geneest."
+        desc: "Une baie qui soigne l'empoisonnement."
     },
     {
         id: "charcoal",
-        name: "Charcoal",
+        name: "Charbon",
         category: "Key Items",
         quantity: 1,
         holdable: true,
         effect: { type: "key" },
-        desc: "Versterkt Fire-type moves als hij wordt vastgehouden."
+        desc: "Tenu, augmente la puissance des capacités Feu."
     },
     {
         id: "town-map",
-        name: "Town Map",
+        name: "Carte",
         category: "Key Items",
         quantity: 1,
         holdable: false,
         effect: { type: "key" },
-        desc: "Toont een kaart van de regio."
+        desc: "Affiche une carte de la région."
     },
     {
         id: "bicycle",
-        name: "Bicycle",
+        name: "Bicyclette",
         category: "Key Items",
         quantity: 1,
         holdable: false,
         effect: { type: "key" },
-        desc: "Een snelle fiets voor lange routes."
+        desc: "Un vélo rapide pour les longues routes."
     }
 ];
 
@@ -388,16 +390,18 @@ function cloneBadge(badge) {
 }
 
 function cloneBagItem(item) {
+    // Saved items keep the texts of the version they were saved with: take current ones from the seed.
+    const seedItem = BAG_ITEM_SEED.find((entry) => entry.id === item.id);
     return {
         id: item.id,
-        name: item.name,
+        name: seedItem?.name || item.name,
         category: item.category,
         quantity: Math.max(0, item.quantity ?? 0),
         holdable: Boolean(item.holdable),
         effect: {
             ...(item.effect || {})
         },
-        desc: item.desc || ""
+        desc: seedItem?.desc || item.desc || ""
     };
 }
 
@@ -566,10 +570,18 @@ function persistMoveCache(cache) {
     persistJson(MOVE_CACHE_STORAGE_KEY, cache);
 }
 
+function findLanguageEntry(entries, languageCode = DEFAULT_LANGUAGE) {
+    return (entries || []).filter((entry) => entry.language?.name === languageCode).pop() || null;
+}
+
 function buildMoveDescription(payload) {
-    const englishEntry = (payload.effect_entries || []).find((entry) => entry.language?.name === "en")
-        || (payload.flavor_text_entries || []).find((entry) => entry.language?.name === "en");
-    return englishEntry?.short_effect || englishEntry?.effect || englishEntry?.flavor_text?.replace(/\s+/g, " ") || "Geen beschrijving beschikbaar.";
+    // PokeAPI has effect texts in English only; the in-game flavor text exists in French.
+    const frenchEntry = findLanguageEntry(payload.flavor_text_entries);
+    return frenchEntry?.flavor_text?.replace(/\s+/g, " ") || "Aucune description disponible.";
+}
+
+function buildMoveDisplayName(payload) {
+    return findLanguageEntry(payload.names)?.name || toTitleCase(payload.name);
 }
 
 function normalizeMoveForPokemon(move) {
@@ -722,9 +734,12 @@ function normalizePokedex(pokedex, party = []) {
         const pokemonId = index + 1;
         const existingEntry = incomingMap.get(pokemonId);
         const defaultState = caughtIds.has(pokemonId) ? "caught" : existingEntry?.state || "unseen";
+        // Names and texts come from the catalog (current language); the save only provides seen/caught.
+        const catalogEntry = getCatalogEntry(pokemonId) ? buildPokedexEntry(pokemonId, defaultState) : null;
         return {
             ...buildPokedexEntry(pokemonId, defaultState),
             ...(existingEntry || {}),
+            ...(catalogEntry || {}),
             state: mergeDexState(defaultState, existingEntry?.state)
         };
     });
@@ -834,7 +849,7 @@ async function fetchMoveCatalog() {
         cache[moveId] = {
             id: payload.id,
             name: payload.name,
-            displayName: toTitleCase(payload.name),
+            displayName: buildMoveDisplayName(payload),
             power: payload.power ?? null,
             accuracy: payload.accuracy ?? null,
             type: toTitleCase(payload.type?.name),
@@ -877,7 +892,7 @@ function getLocalizedSpeciesText(speciesPayload, languageCode, pokemonPayload) {
     const localizedGenus = (speciesPayload?.genera || []).find((entry) => entry.language?.name === languageCode)?.genus || "";
     const localizedFlavor = normalizeFlavorText(
         (speciesPayload?.flavor_text_entries || []).find((entry) => entry.language?.name === languageCode)?.flavor_text
-    ) || "No Pokédex data available.";
+    ) || "Aucune donnée Pokédex disponible.";
 
     return {
         name: localizedName,
@@ -944,19 +959,19 @@ function buildCatalogEntry(pokemonPayload, speciesPayload) {
         result[languageCode] = getLocalizedSpeciesText(speciesPayload, languageCode, pokemonPayload);
         return result;
     }, {});
-    const englishDex = localizedDex.en;
+    const mainDex = localizedDex[DEFAULT_LANGUAGE];
 
     return {
         id: pokemonPayload.id,
-        name: englishDex.name,
+        name: mainDex.name,
         frontSprite: pokemonPayload.sprites?.front_default || "",
         backSprite: pokemonPayload.sprites?.back_default || pokemonPayload.sprites?.front_default || "",
         sprite: pokemonPayload.sprites?.front_default || "",
         type: types,
         height: (pokemonPayload.height || 0) / 10,
         weight: (pokemonPayload.weight || 0) / 10,
-        category: englishDex.category,
-        description: englishDex.description,
+        category: mainDex.category,
+        description: mainDex.description,
         localizedDex,
         baseStats: extractBaseStats(pokemonPayload),
         moves: buildMovesForPokemon(types, pokemonPayload.moves || [])
@@ -979,8 +994,7 @@ async function fetchKantoCatalog() {
     const missingSpeciesIds = speciesIds.filter((id) => {
         const entry = cache[id];
         return !entry
-            || !entry.localizedDex?.en?.name
-            || !entry.localizedDex?.de?.name;
+            || SUPPORTED_POKEDEX_LANGUAGES.some((languageCode) => !entry.localizedDex?.[languageCode]?.name);
     });
     const batchSize = 10;
 
@@ -1011,6 +1025,10 @@ async function fetchKantoCatalog() {
 
 function getCatalogEntry(id) {
     return kantoCatalog[id] || getPokemonCache()[id] || null;
+}
+
+export function getEnglishSpeciesName(id) {
+    return getCatalogEntry(id)?.localizedDex?.en?.name || "";
 }
 
 function scaleStats(baseStats, level) {
@@ -1108,6 +1126,11 @@ export async function initializeGameState() {
         ...DEFAULT_OPTIONS,
         ...(persistedState.options || {})
     };
+    // Saves from before the French version had "en" as the default Pokédex language: switch them once.
+    if (!gameState.options.frenchDefaultApplied) {
+        gameState.options.pokedexLanguage = DEFAULT_LANGUAGE;
+        gameState.options.frenchDefaultApplied = true;
+    }
     gameState.saveSlot = persistedState.saveSlot ?? DEFAULT_SAVE_SLOT;
     gameState.pokemonCenterState = {
         ...DEFAULT_POKEMON_CENTER_STATE,
@@ -1552,14 +1575,14 @@ export function assignHeldItem(partyIndex, itemId) {
     if (!pokemon || !bagItem || !bagItem.holdable || bagItem.quantity <= 0) {
         return {
             success: false,
-            message: "Dat item kan niet worden vastgehouden."
+            message: "Cet objet ne peut pas être tenu."
         };
     }
 
     if (pokemon.heldItem) {
         return {
             success: false,
-            message: `${pokemon.name} houdt al een item vast.`
+            message: `${pokemon.name} tient déjà un objet.`
         };
     }
 
@@ -1573,7 +1596,7 @@ export function assignHeldItem(partyIndex, itemId) {
     commitGameState();
     return {
         success: true,
-        message: `${pokemon.name} houdt nu ${bagItem.name}.`
+        message: `${pokemon.name} tient maintenant ${bagItem.name}.`
     };
 }
 
@@ -1583,7 +1606,7 @@ export function takeHeldItem(partyIndex) {
     if (!pokemon?.heldItem) {
         return {
             success: false,
-            message: "Deze Pokémon houdt niets vast."
+            message: "Ce Pokémon ne tient rien."
         };
     }
 
@@ -1598,7 +1621,7 @@ export function takeHeldItem(partyIndex) {
     commitGameState();
     return {
         success: true,
-        message: `${itemName} werd terug in de BAG geplaatst.`
+        message: `${itemName} a été remis dans le SAC.`
     };
 }
 
@@ -1611,14 +1634,14 @@ export function useBagItem(itemId, partyIndex) {
     if (!pokemon || !bagItem || bagItem.quantity <= 0) {
         return {
             success: false,
-            message: "Dat item is niet beschikbaar."
+            message: "Cet objet n'est pas disponible."
         };
     }
 
     if (bagItem.effect.type === "key" || bagItem.effect.type === "capture") {
         return {
             success: false,
-            message: "Dat item kun je hier niet gebruiken."
+            message: "Impossible d'utiliser cet objet ici."
         };
     }
 
@@ -1627,7 +1650,7 @@ export function useBagItem(itemId, partyIndex) {
         if (!moveTemplate) {
             return {
                 success: false,
-                message: "Deze TM is onbekend."
+                message: "Cette CT est inconnue."
             };
         }
 
@@ -1635,7 +1658,7 @@ export function useBagItem(itemId, partyIndex) {
         if (alreadyKnowsMove) {
             return {
                 success: false,
-                message: `${pokemon.name} kent deze move al.`
+                message: `${pokemon.name} connaît déjà cette capacité.`
             };
         }
 
@@ -1644,7 +1667,7 @@ export function useBagItem(itemId, partyIndex) {
         if (!compatible) {
             return {
                 success: false,
-                message: `${pokemon.name} kan deze TM niet leren.`
+                message: `${pokemon.name} ne peut pas apprendre cette CT.`
             };
         }
 
@@ -1660,7 +1683,7 @@ export function useBagItem(itemId, partyIndex) {
         commitGameState();
         return {
             success: true,
-            message: `${pokemon.name} leerde ${moveTemplate.displayName}!`
+            message: `${pokemon.name} apprend ${moveTemplate.displayName} !`
         };
     }
 
@@ -1668,14 +1691,14 @@ export function useBagItem(itemId, partyIndex) {
         if (pokemon.stats.hp <= 0) {
             return {
                 success: false,
-                message: "Een fainted Pokémon heeft eerst een Revive nodig."
+                message: "Un Pokémon K.O. a d'abord besoin d'un Rappel."
             };
         }
 
         if (pokemon.stats.hp >= pokemon.stats.maxHp) {
             return {
                 success: false,
-                message: `${pokemon.name} heeft al volle HP.`
+                message: `Les PV de ${pokemon.name} sont déjà au max.`
             };
         }
 
@@ -1692,7 +1715,7 @@ export function useBagItem(itemId, partyIndex) {
         commitGameState();
         return {
             success: true,
-            message: `${pokemon.name} herstelde HP!`
+            message: `${pokemon.name} récupère des PV !`
         };
     }
 
@@ -1701,7 +1724,7 @@ export function useBagItem(itemId, partyIndex) {
         if (!pokemon.status || (targetStatus && pokemon.status !== targetStatus)) {
             return {
                 success: false,
-                message: `${pokemon.name} heeft dat niet nodig.`
+                message: `${pokemon.name} n'en a pas besoin.`
             };
         }
 
@@ -1712,7 +1735,7 @@ export function useBagItem(itemId, partyIndex) {
         commitGameState();
         return {
             success: true,
-            message: `${pokemon.name} is weer in orde!`
+            message: `${pokemon.name} est guéri !`
         };
     }
 
@@ -1720,7 +1743,7 @@ export function useBagItem(itemId, partyIndex) {
         if (pokemon.stats.hp > 0) {
             return {
                 success: false,
-                message: `${pokemon.name} is niet fainted.`
+                message: `${pokemon.name} n'est pas K.O.`
             };
         }
 
@@ -1732,13 +1755,13 @@ export function useBagItem(itemId, partyIndex) {
         commitGameState();
         return {
             success: true,
-            message: `${pokemon.name} kwam weer bij bewustzijn!`
+            message: `${pokemon.name} reprend connaissance !`
         };
     }
 
     return {
         success: false,
-        message: "Dat item doet hier niets."
+        message: "Cet objet n'a aucun effet."
     };
 }
 

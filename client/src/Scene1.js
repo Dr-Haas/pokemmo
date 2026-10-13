@@ -43,7 +43,7 @@ export class Scene1 extends Phaser.Scene {
     }
 
     create() {
-        this.loadingText = this.add.text(20, 20, "Loading game...", {
+        this.loadingText = this.add.text(20, 20, "Chargement du jeu...", {
             fontFamily: "\"Press Start 2P\", monospace",
             fontSize: "12px",
             color: "#ffffff"
@@ -54,7 +54,7 @@ export class Scene1 extends Phaser.Scene {
     }
 
     async bootstrapGame() {
-        this.loadingText.setText("Loading game...\nSyncing Kanto Pokédex");
+        this.loadingText.setText("Chargement du jeu...\nTéléchargement du Pokédex de Kanto");
 
         await Promise.all([
             initializeGameState(),
@@ -72,7 +72,7 @@ export class Scene1 extends Phaser.Scene {
                 this.load.image(key, url);
             });
 
-            this.loadingText.setText("Loading game...\nCaching battle sprites");
+            this.loadingText.setText("Chargement du jeu...\nPréparation des sprites de combat");
             this.load.once(Phaser.Loader.Events.COMPLETE, () => {
                 this.startGame();
             });
@@ -84,7 +84,7 @@ export class Scene1 extends Phaser.Scene {
     }
 
     startGame() {
-        this.loadingText.setText("Loading game...\nStarting");
+        this.loadingText.setText("Chargement du jeu...\nC'est parti !");
         const player = getPlayerData();
         this.scene.start("playGame", {
             map: player.position.mapId,

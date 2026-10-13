@@ -426,7 +426,7 @@ export default class PlayerInteractionUI {
                 shape.strokeCircle(cx, cy, 22);
             }
             this.content.add(shape);
-            const name = badge.name.replace(" Badge", "");
+            const name = badge.name.replace(/^Badge /, "").replace(/ Badge$/, "");
             this.content.add(this.text(cx, cy + 32, name, 7, badge.earned ? COLORS.text : COLORS.muted).setOrigin(0.5, 0));
         });
         this.content.add(this.text(x + width - 18, y + height - 24, "B : retour", 8, COLORS.muted).setOrigin(1, 0));

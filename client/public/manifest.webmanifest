@@ -1,6 +1,7 @@
 {
   "name": "PokeMMO",
   "short_name": "PokeMMO",
+  "lang": "fr",
   "description": "Petit jeu d'aventure multijoueur entre amis.",
   "start_url": "./",
   "scope": "./",

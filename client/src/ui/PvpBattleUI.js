@@ -398,7 +398,7 @@ export default class PvpBattleUI extends FireRedBattleUI {
     loadFront(pokemon) {
         return this.ensurePokemonTexture(
             getWildPokemonTextureKey(pokemon.id),
-            getAnimatedSpriteUrl(pokemon.name, "enemy"),
+            getAnimatedSpriteUrl(pokemon, "enemy"),
             pokemon.sprite
         );
     }
@@ -406,7 +406,7 @@ export default class PvpBattleUI extends FireRedBattleUI {
     loadBack(pokemon) {
         return this.ensurePokemonTexture(
             getPokemonBackTextureKey(pokemon.id),
-            getAnimatedSpriteUrl(pokemon.name, "player"),
+            getAnimatedSpriteUrl(pokemon, "player"),
             pokemon.backSprite || pokemon.sprite
         );
     }
