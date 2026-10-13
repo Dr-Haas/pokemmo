@@ -1,12 +1,12 @@
 import Phaser from "phaser";
 import TownJSON from "./assets/tilemaps/town.json";
-import AshveldJSON from "./assets/tilemaps/ashveld.json";
-import CrysthavenJSON from "./assets/tilemaps/crysthaven.json";
-import PokemonCenterAshveldJSON from "./assets/tilemaps/pokemon_center_ashveld.json";
-import PokemonCenterCrysthavenJSON from "./assets/tilemaps/pokemon_center_crysthaven.json";
-import PokemonCenterTownJSON from "./assets/tilemaps/pokemon_center_town.json";
 import Route1JSON from "./assets/tilemaps/route1.json";
+import ViridianJSON from "./assets/tilemaps/viridian.json";
 import Route2JSON from "./assets/tilemaps/route2.json";
+import ViridianForestJSON from "./assets/tilemaps/viridian_forest.json";
+import PewterJSON from "./assets/tilemaps/pewter.json";
+import PokemonCenterViridianJSON from "./assets/tilemaps/pokemon_center_viridian.json";
+import PokemonCenterPewterJSON from "./assets/tilemaps/pokemon_center_pewter.json";
 import HouseJSON from "./assets/tilemaps/house.json";
 import TilesTown from "./assets/tilesets/tuxmon-sample-32px-extruded.png";
 
@@ -14,9 +14,12 @@ import AtlasJSON from "./assets/atlas/atlas";
 import AtlasPNG from "./assets/atlas/atlas.png";
 import PlayersAtlasJSON from "./assets/atlas/players";
 import PlayersAtlasPNG from "./assets/images/players/players.png";
-import { getPlayerData, getPokemonSpriteEntries, initializeGameState, setTrainerName } from "./state/gameState";
+import { getPlayerData, getPokemonSpriteEntries, initializeGameState, setTrainerName, updatePlayerPosition } from "./state/gameState";
 import { nameReady, getPlayerName } from "./SocketServer";
 import { createCharacterAnimations } from "./characters";
+
+// Bumped when the world map is redrawn: older saved positions no longer make sense.
+const KANTO_LAYOUT = 2;
 
 export class Scene1 extends Phaser.Scene {
     constructor() {
@@ -24,18 +27,16 @@ export class Scene1 extends Phaser.Scene {
     }
 
     preload() {
-        // Load Town
+        // Kanto, from Bourg Palette to Argenta (built by tools/kanto_maps.py)
         this.load.image("TilesTown", TilesTown);
         this.load.tilemapTiledJSON("town", TownJSON);
-
-        // Load Route1
         this.load.tilemapTiledJSON("route1", Route1JSON);
-        this.load.tilemapTiledJSON("ashveld", AshveldJSON);
+        this.load.tilemapTiledJSON("viridian", ViridianJSON);
         this.load.tilemapTiledJSON("route2", Route2JSON);
-        this.load.tilemapTiledJSON("crysthaven", CrysthavenJSON);
-        this.load.tilemapTiledJSON("pokemon_center_town", PokemonCenterTownJSON);
-        this.load.tilemapTiledJSON("pokemon_center_ashveld", PokemonCenterAshveldJSON);
-        this.load.tilemapTiledJSON("pokemon_center_crysthaven", PokemonCenterCrysthavenJSON);
+        this.load.tilemapTiledJSON("viridian_forest", ViridianForestJSON);
+        this.load.tilemapTiledJSON("pewter", PewterJSON);
+        this.load.tilemapTiledJSON("pokemon_center_viridian", PokemonCenterViridianJSON);
+        this.load.tilemapTiledJSON("pokemon_center_pewter", PokemonCenterPewterJSON);
         this.load.tilemapTiledJSON("house", HouseJSON);
 
         // Load atlas
@@ -87,14 +88,22 @@ export class Scene1 extends Phaser.Scene {
 
     startGame() {
         this.loadingText.setText("Chargement du jeu...\nC'est parti !");
-        const player = getPlayerData();
+        const { position } = getPlayerData();
+
+        // Saves from the old map (Bourg Écho, Ashveld...) start again in front of the house in Bourg Palette.
+        if (position.layout !== KANTO_LAYOUT) {
+            updatePlayerPosition({ mapId: "town", facing: "front", layout: KANTO_LAYOUT });
+            this.scene.start("playGame", { map: "town", playerTexturePosition: "front", spawnPointName: "Spawn Point" });
+            return;
+        }
+
         this.scene.start("playGame", {
-            map: player.position.mapId,
-            playerTexturePosition: player.position.facing,
+            map: position.mapId,
+            playerTexturePosition: position.facing,
             spawnPointName: "Spawn Point",
             playerPosition: {
-                x: player.position.x,
-                y: player.position.y
+                x: position.x,
+                y: position.y
             }
         });
     }

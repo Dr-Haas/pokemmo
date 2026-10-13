@@ -5,15 +5,11 @@ const FONT_FAMILY = "\"Press Start 2P\"";
 const JOY_NAME = "Infirmière Joëlle";
 const TILE_SIZE = 32;
 const CENTER_INTERIORS = {
-    pokemon_center_town: {
+    pokemon_center_viridian: {
         joy: { x: 5, y: 4 },
         pc: { x: 1, y: 4 }
     },
-    pokemon_center_ashveld: {
-        joy: { x: 5, y: 4 },
-        pc: { x: 1, y: 4 }
-    },
-    pokemon_center_crysthaven: {
+    pokemon_center_pewter: {
         joy: { x: 5, y: 4 },
         pc: { x: 1, y: 4 }
     }

@@ -1,20 +1,29 @@
+// Wild Pokémon in the tall grass, as in Kanto (Rouge Feu / Vert Feuille).
 export const ROUTE_ENCOUNTERS = {
     route1: {
         encounterRate: 0.15,
         pokemonPool: [
-            { pokemonId: 19, minLevel: 3, maxLevel: 5, weight: 40 },
-            { pokemonId: 16, minLevel: 3, maxLevel: 5, weight: 35 },
-            { pokemonId: 10, minLevel: 3, maxLevel: 4, weight: 15 },
-            { pokemonId: 63, minLevel: 5, maxLevel: 7, weight: 10 }
+            { pokemonId: 16, minLevel: 2, maxLevel: 5, weight: 50 },  // Roucool
+            { pokemonId: 19, minLevel: 2, maxLevel: 4, weight: 50 }   // Rattata
         ]
     },
     route2: {
-        encounterRate: 0.18,
+        encounterRate: 0.15,
         pokemonPool: [
-            { pokemonId: 23, minLevel: 6, maxLevel: 9, weight: 35 },
-            { pokemonId: 21, minLevel: 5, maxLevel: 8, weight: 30 },
-            { pokemonId: 39, minLevel: 6, maxLevel: 8, weight: 20 },
-            { pokemonId: 35, minLevel: 7, maxLevel: 10, weight: 15 }
+            { pokemonId: 16, minLevel: 3, maxLevel: 5, weight: 35 },  // Roucool
+            { pokemonId: 19, minLevel: 2, maxLevel: 5, weight: 35 },  // Rattata
+            { pokemonId: 10, minLevel: 4, maxLevel: 5, weight: 15 },  // Chenipan
+            { pokemonId: 13, minLevel: 4, maxLevel: 5, weight: 15 }   // Aspicot
+        ]
+    },
+    viridian_forest: {
+        encounterRate: 0.12,
+        pokemonPool: [
+            { pokemonId: 10, minLevel: 3, maxLevel: 5, weight: 30 },  // Chenipan
+            { pokemonId: 13, minLevel: 3, maxLevel: 5, weight: 30 },  // Aspicot
+            { pokemonId: 11, minLevel: 4, maxLevel: 6, weight: 15 },  // Chrysacier
+            { pokemonId: 14, minLevel: 4, maxLevel: 6, weight: 15 },  // Coconfort
+            { pokemonId: 25, minLevel: 3, maxLevel: 5, weight: 10 }   // Pikachu
         ]
     }
 };

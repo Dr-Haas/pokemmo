@@ -17,6 +17,8 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 COPY server/ ./
 COPY --from=client /app/client/dist /app/client/dist
+# The server reads the maps to keep NPCs off walls (services/mapSpawnValidator.js).
+COPY client/src/assets/tilemaps /app/client/src/assets/tilemaps
 
 ENV PORT=3000
 EXPOSE 3000

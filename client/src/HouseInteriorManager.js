@@ -10,7 +10,7 @@ export const HOUSE_TILEMAP = "house";
 const HOUSE_PREFIX = "house@";
 
 // World-layer tiles drawn as doors on the outdoor maps.
-const DOOR_TILES = new Set([444, 551, 557, 651, 658, 663]);
+const DOOR_TILES = new Set([444, 454, 551, 557, 651, 658, 663]);
 
 const PALETTES = [
     { wall: 0xf0d8a8, wallBand: 0xc89858, floorA: 0xc89060, floorB: 0xb88050, rug: 0x5878c8, blanket: 0xd85050 },

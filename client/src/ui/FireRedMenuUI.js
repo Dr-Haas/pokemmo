@@ -17,12 +17,14 @@ import { bagCategoryLabel, mapLabel, moveCategoryLabel, natureLabel, statusLabel
 import { CHARACTERS, CHARACTER_ATLAS, standingFrame } from "../characters";
 import { getPlayerCharacter, setPlayerCharacter } from "../playerName";
 import { logout } from "../account";
+import TownMapScreen from "./TownMapScreen";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const MENU_OPTIONS = [
     { id: "pokedex", label: "Pokédex" },
     { id: "pokemon", label: "Pokémon" },
     { id: "bag", label: "Sac" },
+    { id: "map", label: "Carte" },
     { id: "save", label: "Sauver" },
     { id: "option", label: "Options" },
     { id: "logout", label: "Déconnexion" },
@@ -209,6 +211,11 @@ export default class FireRedMenuUI {
 
         if (this.view === "options") {
             this.handleOptionInput();
+            return;
+        }
+
+        if (this.view === "map") {
+            this.handleMapInput();
         }
     }
 
@@ -227,6 +234,8 @@ export default class FireRedMenuUI {
         this.createBagScreen();
         this.createSaveScreen();
         this.createOptionsScreen();
+        this.townMap = new TownMapScreen(this.scene, { onClose: () => this.openView("start") });
+        this.root.add(this.townMap.container);
         this.createMessageBox();
 
         this.refreshVisibleView();
@@ -234,7 +243,7 @@ export default class FireRedMenuUI {
 
     createStartMenu() {
         this.startMenuWidth = 220;
-        this.startMenuHeight = 248;
+        this.startMenuHeight = 272;
         this.startMenuY = 28;
         // The menu drops down from the top of the screen.
         this.startMenuX = this.scene.scale.width - this.startMenuWidth - 20;
@@ -542,7 +551,8 @@ export default class FireRedMenuUI {
             this.pokedexContainer,
             this.bagContainer,
             this.saveContainer,
-            this.optionsContainer
+            this.optionsContainer,
+            this.townMap.container
         ].forEach((container) => container.setVisible(false));
     }
 
@@ -589,6 +599,12 @@ export default class FireRedMenuUI {
         if (this.view === "options") {
             this.optionsContainer.setVisible(true);
             this.refreshOptionView();
+            return;
+        }
+
+        if (this.view === "map") {
+            this.townMap.container.setVisible(true);
+            this.townMap.refresh(this.cursorVisible);
         }
     }
 
@@ -645,6 +661,25 @@ export default class FireRedMenuUI {
         }
         if (option === "option") {
             this.openView("options");
+            return;
+        }
+        if (option === "map") {
+            this.townMap.show(this.scene.mapName);
+            this.openView("map");
+        }
+    }
+
+    handleMapInput() {
+        if (this.isCancelPressed()) {
+            this.openView("start");
+            return;
+        }
+        if (this.isUpPressed() || this.isLeftPressed()) {
+            this.townMap.move(-1);
+            return;
+        }
+        if (this.isDownPressed() || this.isRightPressed()) {
+            this.townMap.move(1);
         }
     }
 

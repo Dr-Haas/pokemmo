@@ -34,8 +34,8 @@ const DEFAULT_PLAYER_STATE = {
     rival: DEFAULT_RIVAL_NAME,
     position: {
         mapId: "town",
-        x: 656,
-        y: 1150,
+        x: 272,
+        y: 276,
         facing: "front"
     }
 };
@@ -1557,11 +1557,9 @@ export function getMoveColor(typeName) {
 
 export function getEncounterLevelForMap(mapName) {
     const encounterBands = {
-        route1: { min: 3, max: 10 },
-        route2: { min: 6, max: 12 },
-        town: { min: 2, max: 6 },
-        ashveld: { min: 5, max: 10 },
-        crysthaven: { min: 8, max: 14 }
+        route1: { min: 2, max: 5 },
+        route2: { min: 2, max: 5 },
+        viridian_forest: { min: 3, max: 6 }
     };
 
     const band = encounterBands[mapName] || encounterBands.route1;

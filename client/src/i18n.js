@@ -59,14 +59,14 @@ const BAG_CATEGORY_LABELS = {
 };
 
 const MAP_LABELS = {
-    town: "Bourg Écho",
+    town: "Bourg Palette",
     route1: "Route 1",
-    ashveld: "Ashveld",
+    viridian: "Jadielle",
     route2: "Route 2",
-    crysthaven: "Crysthaven",
-    pokemon_center_town: "Centre Pokémon",
-    pokemon_center_ashveld: "Centre Pokémon",
-    pokemon_center_crysthaven: "Centre Pokémon"
+    viridian_forest: "Forêt de Jade",
+    pewter: "Argenta",
+    pokemon_center_viridian: "Centre Pokémon",
+    pokemon_center_pewter: "Centre Pokémon"
 };
 
 export function typeLabel(type) {

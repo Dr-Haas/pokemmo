@@ -2,7 +2,7 @@ const colyseus = require('colyseus');
 const { registerSocial } = require('./social');
 const accounts = require('../services/accounts');
 
-const DEFAULT_SPAWN = { map: 'town', x: 656, y: 1150 };
+const DEFAULT_SPAWN = { map: 'town', x: 272, y: 276 };
 const MAX_NAME_LENGTH = 12;
 
 function cleanName(raw) {

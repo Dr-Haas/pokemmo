@@ -4,6 +4,7 @@ Version modifiée de PokeMMO pour jouer entre nous, sur ordinateur ou téléphon
 
 ## Ce qui a changé
 
+- **Kanto** : Bourg Palette, Route 1, Jadielle, Route 2, Forêt de Jade et Argenta, avec les Pokémon sauvages de Rouge Feu / Vert Feuille. Les cartes sont générées par `tools/kanto_maps.py` (à relancer après modification : `python3 tools/kanto_maps.py`). Menu > **Carte** montre la région et où on se trouve.
 - **Mobile** : croix directionnelle et boutons A / B à l'écran (affichés seulement sur écran tactile). Le jeu s'adapte à la taille de l'écran, en paysage (plein écran) comme en portrait (style Game Boy). Vérifié aux tailles iPhone 15, 16 Pro et 17 Pro Max.
 - **Menu déroulant** : on touche la bande noire en haut de l'écran (onglet MENU), le menu descend. On peut toucher directement ses options.
 - **Entre joueurs** : en s'approchant d'un autre joueur, une bulle « A ÉCHANGER » apparaît. A ouvre un menu : voir son **Pokédex** (vus, pris, équipe), voir ses **badges**, ou le **défier en combat**.
