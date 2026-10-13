@@ -32,8 +32,8 @@ const DEFAULT_PLAYER_STATE = {
     rival: DEFAULT_RIVAL_NAME,
     position: {
         mapId: "town",
-        x: 352,
-        y: 1216,
+        x: 656,
+        y: 1150,
         facing: "front"
     }
 };

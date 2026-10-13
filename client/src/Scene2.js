@@ -77,6 +77,11 @@ export class Scene2 extends Phaser.Scene {
             y: this.playerPosition?.y ?? spawnPoint.y
         });
 
+        // A saved position inside a wall (old save, edited map) leaves the player stuck: use the map's spawn point.
+        if (this.playerPosition && spawnPoint && this.isInsideWall(this.player.body)) {
+            this.player.body.reset(spawnPoint.x, spawnPoint.y);
+        }
+
         const camera = this.cameras.main;
         camera.startFollow(this.player);
         camera.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
@@ -372,6 +377,12 @@ export class Scene2 extends Phaser.Scene {
                 faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
             });
         });
+    }
+
+    isInsideWall(body) {
+        return this.worldLayer.getTilesWithinWorldXY(
+            body.x + 1, body.y + 1, body.width - 2, body.height - 2, {isColliding: true}
+        ).length > 0;
     }
 
     isInterfaceOpen() {
