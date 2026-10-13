@@ -9,6 +9,12 @@ function cleanName(raw) {
     return name || 'Dresseur';
 }
 
+// Sprite name in the client's "players" atlas; the client falls back to a default if unknown.
+function cleanCharacter(raw) {
+    const character = String(raw || '');
+    return /^[a-z0-9]{1,24}$/.test(character) ? character : 'misa';
+}
+
 function isFiniteNumber(value) {
     return typeof value === 'number' && Number.isFinite(value);
 }
@@ -51,6 +57,7 @@ exports.PokeWorld = class extends colyseus.Room {
             this.broadcast("PLAYER_MOVEMENT_ENDED", {
                 sessionId: client.sessionId,
                 name: player.name,
+                character: player.character,
                 map: player.map,
                 x: player.x,
                 y: player.y,
@@ -114,6 +121,7 @@ exports.PokeWorld = class extends colyseus.Room {
         this.players[client.sessionId] = {
             sessionId: client.sessionId,
             name,
+            character: cleanCharacter(options && options.character),
             ...DEFAULT_SPAWN
         };
         // Others see this player once it sends PLAYER_READY with its real position.

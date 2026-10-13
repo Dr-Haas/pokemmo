@@ -16,6 +16,7 @@ import PlayersAtlasJSON from "./assets/atlas/players";
 import PlayersAtlasPNG from "./assets/images/players/players.png";
 import { getPlayerData, getPokemonSpriteEntries, initializeGameState, setTrainerName } from "./state/gameState";
 import { nameReady, getPlayerName } from "./SocketServer";
+import { createCharacterAnimations } from "./characters";
 
 export class Scene1 extends Phaser.Scene {
     constructor() {
@@ -98,6 +99,9 @@ export class Scene1 extends Phaser.Scene {
     }
 
     createAnimations() {
+        // Every pickable character, for the local and the online players.
+        createCharacterAnimations(this);
+
         // Create the player's walking animations from the texture currentPlayer. These are stored in the global
         // animation manager so any sprite can access them.
         this.anims.create({

@@ -1,6 +1,6 @@
 import * as Colyseus from "colyseus.js";
 import { SERVER_URL } from "./config";
-import { askPlayerName } from "./playerName";
+import { askPlayerName, getPlayerCharacter } from "./playerName";
 
 /*================================================
 | Array with current online players
@@ -21,7 +21,7 @@ const nameReady = askPlayerName().then((name) => {
 });
 
 const room = nameReady
-    .then((name) => client.joinOrCreate("poke_world", { name, code: getGameCode() }))
+    .then((name) => client.joinOrCreate("poke_world", { name, character: getPlayerCharacter(), code: getGameCode() }))
     .then((joinedRoom) => {
         console.log(joinedRoom.sessionId, "joined", joinedRoom.name);
         return joinedRoom;

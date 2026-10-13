@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { ENTITY_SIZE } from "./constants/entity";
 import { OTHER_PLAYER_NICKNAME_STYLE } from "./constants/nickname";
+import { CHARACTER_ATLAS, standingFrame, walkAnimation } from "./characters";
 
 export default class OnlinePlayer extends Phaser.GameObjects.Sprite {
     constructor(config) {
@@ -10,7 +11,8 @@ export default class OnlinePlayer extends Phaser.GameObjects.Sprite {
         this.scene.physics.world.enableBody(this);
         this.scene.physics.add.collider(this, config.worldLayer);
 
-        this.setTexture("players", "bob_front.png");
+        this.character = config.character;
+        this.setTexture(CHARACTER_ATLAS, standingFrame(this.character, "front"));
         this.setDisplaySize(ENTITY_SIZE.width, ENTITY_SIZE.height);
         this.setDepth(5);
 
@@ -30,6 +32,13 @@ export default class OnlinePlayer extends Phaser.GameObjects.Sprite {
         this.updateNicknamePosition();
     }
 
+    setCharacter(character) {
+        if (character && character !== this.character) {
+            this.character = character;
+            this.setTexture(CHARACTER_ATLAS, standingFrame(character, "front"));
+        }
+    }
+
     setName(name) {
         if (name && this.playerNickname.text !== name) {
             this.playerNickname.setText(name);
@@ -42,13 +51,13 @@ export default class OnlinePlayer extends Phaser.GameObjects.Sprite {
     }
 
     isWalking(position, x, y) {
-        this.anims.play(`onlinePlayer-${position}-walk`, true);
+        this.anims.play(walkAnimation(this.character, position), true);
         this.setPosition(x, y);
     }
 
     stopWalking(position) {
         this.anims.stop();
-        this.setTexture("players", `bob_${position}.png`);
+        this.setTexture(CHARACTER_ATLAS, standingFrame(this.character, position));
     }
 
     destroy() {

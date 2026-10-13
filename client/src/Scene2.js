@@ -524,6 +524,7 @@ export class Scene2 extends Phaser.Scene {
         if (existingPlayer) {
             existingPlayer.map = playerData.map;
             existingPlayer.setName(playerData.name);
+            existingPlayer.setCharacter(playerData.character);
             if (Number.isFinite(playerData.x) && Number.isFinite(playerData.y)) {
                 existingPlayer.setPosition(playerData.x, playerData.y);
             }
@@ -539,6 +540,7 @@ export class Scene2 extends Phaser.Scene {
             worldLayer: this.worldLayer,
             playerId: playerData.sessionId,
             name: playerData.name,
+            character: playerData.character,
             key: playerData.sessionId,
             map: playerData.map,
             x: playerData.x,

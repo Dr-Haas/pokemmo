@@ -290,6 +290,37 @@
         box-shadow: 0 4px 0 #8f1f33;
       }
 
+      .card .character-title { margin: 16px 0 8px; }
+      .character-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+      }
+      .card .character {
+        margin: 0;
+        padding: 4px 0 3px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        background: #fff;
+        border: 3px solid #c9c2ad;
+        border-radius: 4px;
+        box-shadow: none;
+        color: #1c1f3a;
+        font-size: 6px;
+        line-height: 1.4;
+      }
+      .card .character canvas {
+        width: 32px;
+        height: auto;
+        image-rendering: pixelated;
+      }
+      .card .character.is-selected {
+        border-color: var(--btn-a);
+        background: #ffe9ec;
+      }
+
       .card .install-hint {
         margin: 16px 0 0;
         font-size: 8px;
@@ -342,6 +373,8 @@
         <h1>Ton nom de dresseur</h1>
         <p>C'est le nom que les autres joueurs verront au-dessus de ta tête.</p>
         <input name="name" type="text" placeholder="Sacha" enterkeyhint="go" autocapitalize="words" spellcheck="false">
+        <p class="character-title">Ton personnage</p>
+        <div class="character-grid" role="radiogroup" aria-label="Ton personnage"></div>
         <button type="submit">Jouer</button>
         <p class="install-hint" id="install-hint" hidden></p>
         <button type="button" class="install-button" id="install-button" hidden>Installer l'app</button>

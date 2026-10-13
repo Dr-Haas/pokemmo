@@ -3,6 +3,8 @@ import { room, getPlayerName } from './SocketServer';
 import { NICKNAME_STYLE } from "./constants/nickname";
 import { ENTITY_SIZE } from "./constants/entity";
 import { houseExitFor, isHouseMap } from "./HouseInteriorManager";
+import { CHARACTER_ATLAS, standingFrame, walkAnimation } from "./characters";
+import { getPlayerCharacter } from "./playerName";
 
 
 export default class Player extends Phaser.GameObjects.Sprite {
@@ -13,7 +15,9 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.scene.physics.world.enableBody(this);
         this.scene.physics.add.collider(this, config.worldLayer);
 
-        this.setTexture("currentPlayer", `misa-${this.scene.playerTexturePosition}`);
+        // Character picked on the start screen
+        this.character = getPlayerCharacter();
+        this.setTexture(CHARACTER_ATLAS, standingFrame(this.character, this.scene.playerTexturePosition || "front"));
         this.setDisplaySize(ENTITY_SIZE.width, ENTITY_SIZE.height);
 
         // Register cursors for player movement
@@ -97,16 +101,16 @@ export default class Player extends Phaser.GameObjects.Sprite {
         // Update the animation last and give left/right animations precedence over up/down animations
         if (this.cursors.left.isDown) {
             this.setFacing("left", false);
-            this.anims.play("misa-left-walk", true);
+            this.anims.play(walkAnimation(this.character, "left"), true);
         } else if (this.cursors.right.isDown) {
             this.setFacing("right", false);
-            this.anims.play("misa-right-walk", true);
+            this.anims.play(walkAnimation(this.character, "right"), true);
         } else if (this.cursors.up.isDown) {
             this.setFacing("back", false);
-            this.anims.play("misa-back-walk", true);
+            this.anims.play(walkAnimation(this.character, "back"), true);
         } else if (this.cursors.down.isDown) {
             this.setFacing("front", false);
-            this.anims.play("misa-front-walk", true);
+            this.anims.play(walkAnimation(this.character, "front"), true);
         } else {
             this.anims.stop();
 
@@ -122,7 +126,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.facing = direction;
         this.scene.playerTexturePosition = direction;
         if (updateTexture) {
-            this.setTexture("currentPlayer", `misa-${direction}`);
+            this.setTexture(CHARACTER_ATLAS, standingFrame(this.character, direction));
         }
     }
 
