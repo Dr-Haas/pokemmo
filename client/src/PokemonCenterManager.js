@@ -138,7 +138,7 @@ export default class PokemonCenterManager {
             return;
         }
 
-        const promptText = interaction.kind === "joy" ? "Z ZUSTER JOY" : "Z PC";
+        const promptText = interaction.kind === "joy" ? "A : PARLER" : "A : UTILISER LE PC";
         const promptX = interaction.tile.x * TILE_SIZE;
         const promptY = interaction.tile.y * TILE_SIZE;
         this.prompt
@@ -192,7 +192,8 @@ export default class PokemonCenterManager {
 
         this.decorRoot.add(baseGraphics);
 
-        this.joySprite = this.scene.add.image((5 * TILE_SIZE) + 16, (4 * TILE_SIZE) + 12, "players", "nurse_front.png")
+        // Behind the counter: the counter front (drawn after her) hides her legs.
+        this.joySprite = this.scene.add.image((5 * TILE_SIZE) + 16, (TILE_SIZE * 3) + 26, "players", "nurse_front.png")
             .setOrigin(0.5, 1)
             .setDisplaySize(TILE_SIZE, TILE_SIZE * 2)
             .setDepth(6);
@@ -243,12 +244,13 @@ export default class PokemonCenterManager {
         this.cursor = this.createText(514, 84, "▌", 10, COLORS.cursor).setOrigin(1, 0);
         this.uiPanel.add(this.cursor);
 
-        this.choicePanel = this.scene.add.container(594, 314).setVisible(false);
-        this.choicePanel.add(this.createPanel(156, 84));
+        this.choicePanel = this.scene.add.container(594, 288).setVisible(false);
+        this.choicePanel.add(this.createPanel(156, 110));
         this.choiceCursor = this.createText(14, 16, "►", 8);
         this.choiceLabels = [
             this.createText(34, 16, "", 8),
-            this.createText(34, 42, "", 8)
+            this.createText(34, 42, "", 8),
+            this.createText(34, 68, "", 8)
         ];
         this.choicePanel.add(this.choiceCursor);
         this.choiceLabels.forEach((label) => this.choicePanel.add(label));
@@ -367,11 +369,18 @@ export default class PokemonCenterManager {
                 label: "Pokémon",
                 onSelect: () => {
                     this.closeUi();
-                    this.scene.menuUi.openPartyView();
+                    this.scene.menuUi.openPartyView({ fromPc: true });
                 }
             },
             {
-                label: "Déconnexion",
+                label: "Pokédex",
+                onSelect: () => {
+                    this.closeUi();
+                    this.scene.menuUi.openPokedexView({ fromPc: true });
+                }
+            },
+            {
+                label: "Quitter",
                 onSelect: () => {
                     this.showTextSequence("PC", [
                         "Le PC s'éteint."

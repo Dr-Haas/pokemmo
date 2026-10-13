@@ -219,9 +219,23 @@ export default class FireRedMenuUI {
         }
     }
 
-    openPartyView() {
-        this.previousView = "start";
+    openPartyView({ fromPc = false } = {}) {
+        // From the Pokémon Center PC, going back returns to the game, not to the start menu.
+        this.previousView = fromPc ? "closed" : "start";
         this.openView("party");
+    }
+
+    openPokedexView({ fromPc = false } = {}) {
+        this.pokedexReturnView = fromPc ? "closed" : "start";
+        this.openView("pokedex");
+    }
+
+    goBackTo(view) {
+        if (view === "closed") {
+            this.closeMenu();
+            return;
+        }
+        this.openView(view);
     }
 
     createUi() {
@@ -648,7 +662,7 @@ export default class FireRedMenuUI {
             return;
         }
         if (option === "pokedex") {
-            this.openView("pokedex");
+            this.openPokedexView();
             return;
         }
         if (option === "bag") {
@@ -723,7 +737,7 @@ export default class FireRedMenuUI {
         }
 
         if (this.isCancelPressed()) {
-            this.openView(this.previousView);
+            this.goBackTo(this.previousView);
             return;
         }
 
@@ -884,7 +898,7 @@ export default class FireRedMenuUI {
 
     handlePokedexInput() {
         if (this.isCancelPressed()) {
-            this.openView("start");
+            this.goBackTo(this.pokedexReturnView || "start");
             return;
         }
 
