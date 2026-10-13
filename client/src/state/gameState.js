@@ -273,7 +273,44 @@ const stateListeners = new Set();
 let kantoCatalog = {};
 let moveCatalog = {};
 
+// Adventure progress (Rouge Feu style). Saves without it, or from an older version,
+// start a new adventure: empty team, the Professor's lab first.
+const STORY_VERSION = 1;
+const NEW_ADVENTURE_MONEY = 3000;
+const NEW_ADVENTURE_BAG = [
+    { id: "potion", quantity: 1 },
+    { id: "town-map", quantity: 1 }
+];
+
+function createDefaultStory() {
+    return { version: STORY_VERSION, flags: {}, defeated: [], lastCenter: null };
+}
+
+function cloneStory(story) {
+    return {
+        version: story?.version ?? STORY_VERSION,
+        flags: { ...(story?.flags || {}) },
+        defeated: Array.isArray(story?.defeated) ? [...story.defeated] : [],
+        lastCenter: story?.lastCenter || null
+    };
+}
+
+function createNewAdventureBag() {
+    const bag = createDefaultBag();
+    BAG_CATEGORIES.forEach((category) => {
+        bag[category] = [];
+    });
+    NEW_ADVENTURE_BAG.forEach(({ id, quantity }) => {
+        const seed = BAG_ITEM_SEED.find((item) => item.id === id);
+        if (seed) {
+            bag[seed.category].push(cloneBagItem({ ...seed, quantity }));
+        }
+    });
+    return bag;
+}
+
 export const gameState = {
+    story: createDefaultStory(),
     player: clonePlayer(DEFAULT_PLAYER_STATE),
     party: [],
     box: createEmptyBoxes(),
@@ -516,6 +553,7 @@ function cloneBag(bag) {
 
 function cloneGameState(state = gameState) {
     return {
+        story: cloneStory(state.story),
         player: clonePlayer(state.player),
         party: cloneParty(state.party),
         box: cloneBoxes(state.box),
@@ -670,12 +708,11 @@ function normalizePokemon(pokemon, fallbackPokemon = null) {
 }
 
 function normalizeParty(party) {
-    const incomingParty = Array.isArray(party) && party.length ? party : PARTY_SEED;
-    const normalizedParty = incomingParty
+    // The team starts empty: the first Pokémon comes from the Professor.
+    const incomingParty = Array.isArray(party) ? party : [];
+    return incomingParty
         .slice(0, 6)
         .map((pokemon) => normalizePokemon(pokemon, PARTY_SEED.find((entry) => entry.id === pokemon.id) || null));
-
-    return normalizedParty.length ? normalizedParty : PARTY_SEED.slice(0, 1).map((pokemon) => normalizePokemon(pokemon, pokemon));
 }
 
 function normalizeBadges(badges) {
@@ -757,17 +794,25 @@ function mergeDexState(firstState = "unseen", secondState = "unseen") {
 
 function loadPersistedGameState() {
     const persistedState = extractPersistedState(parseStoredJson(GAME_STATE_STORAGE_KEY, null));
-    if (!persistedState) {
+    if (!persistedState || persistedState.story?.version !== STORY_VERSION) {
+        // New adventure. The trainer name and the options are kept.
         return {
-            player: clonePlayer(DEFAULT_PLAYER_STATE),
-            party: PARTY_SEED.map((pokemon) => clonePokemon(pokemon)),
+            story: createDefaultStory(),
+            player: {
+                ...clonePlayer(DEFAULT_PLAYER_STATE),
+                name: persistedState?.player?.name || persistedState?.trainerName || DEFAULT_TRAINER_NAME
+            },
+            party: [],
             box: createEmptyBoxes(),
             pokedex: [],
-            bag: createDefaultBag(),
+            bag: createNewAdventureBag(),
             badges: createDefaultBadges(),
-            money: DEFAULT_MONEY,
+            money: NEW_ADVENTURE_MONEY,
             playTime: 0,
-            options: { ...DEFAULT_OPTIONS },
+            options: {
+                ...DEFAULT_OPTIONS,
+                ...(persistedState?.options || {})
+            },
             saveSlot: DEFAULT_SAVE_SLOT,
             pokemonCenterState: { ...DEFAULT_POKEMON_CENTER_STATE }
         };
@@ -776,6 +821,7 @@ function loadPersistedGameState() {
     const legacyTrainerName = persistedState.trainerName || persistedState.player?.name || DEFAULT_TRAINER_NAME;
 
     return {
+        story: cloneStory(persistedState.story),
         player: {
             ...clonePlayer(DEFAULT_PLAYER_STATE),
             ...(persistedState.player || {}),
@@ -785,9 +831,9 @@ function loadPersistedGameState() {
                 ...(persistedState.player?.position || {})
             }
         },
-        party: Array.isArray(persistedState.party) && persistedState.party.length
+        party: Array.isArray(persistedState.party)
             ? persistedState.party.map((pokemon) => clonePokemon(pokemon))
-            : PARTY_SEED.map((pokemon) => clonePokemon(pokemon)),
+            : [],
         box: cloneBoxes(persistedState.box),
         pokedex: Array.isArray(persistedState.pokedex) ? persistedState.pokedex.map(clonePokedexEntry) : [],
         bag: normalizeBag(persistedState.bag || createDefaultBag()),
@@ -1114,6 +1160,7 @@ export async function initializeGameState() {
     const persistedState = loadPersistedGameState();
     const enrichedParty = persistedState.party.map((pokemon) => enrichSeedPokemon(pokemon));
 
+    gameState.story = cloneStory(persistedState.story);
     gameState.player = clonePlayer(persistedState.player);
     gameState.party = normalizeParty(enrichedParty);
     gameState.box = cloneBoxes(persistedState.box);
@@ -1818,4 +1865,166 @@ export function getSaveSlotData(saveSlot = gameState.saveSlot) {
 
 function PhaserMathBetween(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/*------------------------------------------------
+| Adventure: story flags, trainers, money, items, experience
+*/
+
+export function getStoryFlag(name) {
+    return Boolean(gameState.story.flags[name]);
+}
+
+/** The flag's own value (e.g. the starter's number). */
+export function getStoryValue(name) {
+    return gameState.story.flags[name] ?? null;
+}
+
+export function setStoryFlag(name, value = true) {
+    gameState.story.flags[name] = value;
+    commitGameState({ notifyParty: false });
+}
+
+export function isTrainerDefeated(trainerId) {
+    return gameState.story.defeated.includes(trainerId);
+}
+
+export function markTrainerDefeated(trainerId) {
+    if (!isTrainerDefeated(trainerId)) {
+        gameState.story.defeated.push(trainerId);
+        commitGameState({ notifyParty: false });
+    }
+}
+
+/** Where a player who loses every Pokémon wakes up: the last Pokémon Center, or home. */
+export function getWhiteoutDestination() {
+    return gameState.story.lastCenter
+        ? { map: gameState.story.lastCenter, spawnPointName: "from-exterior" }
+        : { map: "town", spawnPointName: "Spawn Point" };
+}
+
+export function setLastPokemonCenter(mapName) {
+    if (gameState.story.lastCenter !== mapName) {
+        gameState.story.lastCenter = mapName;
+        commitGameState({ notifyParty: false });
+    }
+}
+
+export function getMoney() {
+    return gameState.money;
+}
+
+/** Adds (or with a negative amount, takes) money; never below zero. Returns the new amount. */
+export function addMoney(amount) {
+    gameState.money = Math.max(0, Math.round((gameState.money || 0) + amount));
+    commitGameState({ notifyParty: false });
+    return gameState.money;
+}
+
+export function getItemDefinition(itemId) {
+    const seed = BAG_ITEM_SEED.find((item) => item.id === itemId);
+    return seed ? cloneBagItem({ ...seed, quantity: 1 }) : null;
+}
+
+export function getItemQuantity(itemId) {
+    return getBagItemById(itemId)?.quantity || 0;
+}
+
+export function addBagItem(itemId, quantity = 1) {
+    const seed = BAG_ITEM_SEED.find((item) => item.id === itemId);
+    if (!seed) {
+        return false;
+    }
+    const nextBag = cloneBag(gameState.bag);
+    const existing = getBagItemById(itemId, nextBag);
+    if (existing) {
+        existing.quantity += quantity;
+    } else {
+        nextBag[seed.category].push(cloneBagItem({ ...seed, quantity }));
+    }
+    gameState.bag = normalizeBag(nextBag);
+    commitGameState({ notifyParty: false });
+    return true;
+}
+
+export function removeBagItem(itemId, quantity = 1) {
+    const nextBag = cloneBag(gameState.bag);
+    const existing = getBagItemById(itemId, nextBag);
+    if (!existing || existing.quantity < quantity) {
+        return false;
+    }
+    existing.quantity -= quantity;
+    gameState.bag = normalizeBag(nextBag);
+    commitGameState({ notifyParty: false });
+    return true;
+}
+
+export function earnBadge(badgeId) {
+    gameState.badges = gameState.badges.map((badge) => (badge.id === badgeId ? { ...badge, earned: true } : badge));
+    commitGameState({ notifyParty: false });
+}
+
+/** Total experience to reach a level ("medium fast" curve). */
+export function experienceForLevel(level) {
+    return Math.max(0, level) ** 3;
+}
+
+/** Experience for beating a Pokémon, bigger against a trainer's. */
+export function experienceReward(defeated, { trainer = false } = {}) {
+    const base = getCatalogEntry(defeated.id)?.baseStats;
+    const total = base ? Object.values(base).reduce((sum, value) => sum + value, 0) : 250;
+    return Math.max(1, Math.floor(((total / 5) * defeated.level / 7) * (trainer ? 1.5 : 1)));
+}
+
+/**
+ * Gives experience to a Pokémon (a battle copy) and levels it up in place.
+ * Returns the levels reached, for the battle messages.
+ */
+export function applyExperience(pokemon, amount) {
+    const levels = [];
+    pokemon.exp = Math.max(pokemon.exp || 0, experienceForLevel(pokemon.level)) + amount;
+    while (pokemon.level < 100 && pokemon.exp >= experienceForLevel(pokemon.level + 1)) {
+        pokemon.level += 1;
+        const base = getCatalogEntry(pokemon.id)?.baseStats;
+        if (base) {
+            const next = scaleStats(base, pokemon.level);
+            const gainedHp = next.maxHp - pokemon.stats.maxHp;
+            pokemon.stats = {
+                ...next,
+                hp: clamp(pokemon.stats.hp + Math.max(0, gainedHp), 0, next.maxHp)
+            };
+        }
+        levels.push(pokemon.level);
+    }
+    return levels;
+}
+
+/** A Pokémon for the player (the starter, a catch): to the team, or the PC when it is full. */
+export function givePokemon(pokemon) {
+    const owned = normalizePokemon({
+        ...pokemon,
+        exp: Math.max(pokemon.exp || 0, experienceForLevel(pokemon.level)),
+        originalTrainer: gameState.player.name,
+        trainerId: gameState.player.id,
+        met: { mapId: gameState.player.position.mapId, level: pokemon.level }
+    });
+
+    let destination = "party";
+    if (gameState.party.length < 6) {
+        gameState.party = normalizeParty([...gameState.party, owned]);
+    } else {
+        destination = "box";
+        const box = gameState.box.find((entry) => entry.length < 30) || gameState.box[0];
+        box.push(owned);
+    }
+    gameState.pokedex = normalizePokedex(gameState.pokedex, gameState.party);
+    setDexState(owned.id, "caught");
+    commitGameState();
+    return destination;
+}
+
+function setDexState(pokemonId, state) {
+    gameState.pokedex = gameState.pokedex.map((entry) => (
+        entry.id === pokemonId ? { ...entry, state: mergeDexState(state, entry.state) } : entry
+    ));
 }

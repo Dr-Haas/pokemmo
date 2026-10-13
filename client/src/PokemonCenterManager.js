@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { healParty, isPartyFullyHealed, updatePokemonCenterState } from "./state/gameState";
+import { healParty, isPartyFullyHealed, setLastPokemonCenter, updatePokemonCenterState } from "./state/gameState";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const JOY_NAME = "Infirmière Joëlle";
@@ -69,6 +69,8 @@ export default class PokemonCenterManager {
             return;
         }
 
+        // After losing every battle, the player comes back to the last Center visited.
+        setLastPokemonCenter(this.scene.mapName);
         this.createInteriorDecor();
         this.createUi();
         this.createPrompt();

@@ -5,8 +5,12 @@
 // A house map is named "house@<outdoor map>@<door x>@<door y>" (door in tiles), so
 // saving, multiplayer and the way out all know which house the player is in.
 
+import { SPECIAL_INTERIORS } from "./data/story";
+
 const TILE = 32;
 export const HOUSE_TILEMAP = "house";
+// Empty room for the lab, gyms, marts and museum (see data/story.js).
+const HALL_TILEMAP = "hall";
 const HOUSE_PREFIX = "house@";
 
 // World-layer tiles drawn as doors on the outdoor maps.
@@ -23,8 +27,19 @@ export function isHouseMap(mapName) {
     return typeof mapName === "string" && mapName.startsWith(HOUSE_PREFIX);
 }
 
+/** "lab", "gym", "mart"... for the special buildings, null for an ordinary house. */
+export function interiorStyleFor(mapName) {
+    if (!isHouseMap(mapName)) {
+        return null;
+    }
+    return SPECIAL_INTERIORS[mapName.slice(HOUSE_PREFIX.length)] || null;
+}
+
 export function tilemapKeyFor(mapName) {
-    return isHouseMap(mapName) ? HOUSE_TILEMAP : mapName;
+    if (!isHouseMap(mapName)) {
+        return mapName;
+    }
+    return interiorStyleFor(mapName) ? HALL_TILEMAP : HOUSE_TILEMAP;
 }
 
 function parseHouse(mapName) {
@@ -100,7 +115,63 @@ export default class HouseInteriorManager {
         scene.aboveLayer.setVisible(false);
 
         this.root = scene.add.container(0, 0).setDepth(3);
-        this.draw();
+        this.style = interiorStyleFor(scene.mapName);
+        if (this.style) {
+            this.drawHall(this.style);
+        } else {
+            this.draw();
+        }
+    }
+
+    // Lab, gyms, marts, museum: floor and walls here; counters, tables and people come
+    // from the StoryManager, which also makes them solid.
+    drawHall(style) {
+        const g = this.scene.add.graphics();
+        const width = this.scene.map.widthInPixels;
+        const height = this.scene.map.heightInPixels;
+        this.root.add(g);
+
+        const look = {
+            lab: { wall: 0xe8eef0, band: 0x8aa0b0, floorA: 0xf4f4f0, floorB: 0xe2e6e8 },
+            gym: { wall: 0x9a8a72, band: 0x6a5a48, floorA: 0xb8a888, floorB: 0xa89878 },
+            "gym-closed": { wall: 0x8aa088, band: 0x5a7058, floorA: 0xc8d0b8, floorB: 0xb8c0a8 },
+            mart: { wall: 0xd8e4f4, band: 0x4870b8, floorA: 0xf0f0f0, floorB: 0xd8dce4 },
+            museum: { wall: 0xe8dcc8, band: 0x8a6a48, floorA: 0xd8c8a8, floorB: 0xc8b898 }
+        }[style];
+
+        for (let y = 2; y < this.scene.map.height; y += 1) {
+            for (let x = 0; x < this.scene.map.width; x += 1) {
+                g.fillStyle((x + y) % 2 === 0 ? look.floorA : look.floorB, 1);
+                g.fillRect(x * TILE, y * TILE, TILE, TILE);
+            }
+        }
+        g.fillStyle(look.wall, 1);
+        g.fillRect(0, 0, width, TILE * 2);
+        g.fillStyle(look.band, 1);
+        g.fillRect(0, (TILE * 2) - 10, width, 10);
+        g.fillRect(0, TILE * 2, 10, height - (TILE * 2));
+        g.fillRect(width - 10, TILE * 2, 10, height - (TILE * 2));
+        g.fillStyle(0x9a3a2a, 1);
+        g.fillRect((TILE * 4) + 8, height - TILE + 6, TILE * 2 - 16, TILE - 10);
+
+        if (style === "lab") {
+            // Machines and bookshelves along the back wall
+            for (let i = 0; i < 4; i += 1) {
+                g.fillStyle(0x7088a0, 1);
+                g.fillRect((TILE * (1 + i * 2)) + 4, TILE * 0.6, TILE * 1.4, TILE * 1.2);
+                g.fillStyle(0x90e0b0, 1);
+                g.fillRect((TILE * (1 + i * 2)) + 10, TILE * 0.8, TILE * 0.8, TILE * 0.4);
+            }
+        } else if (style === "gym") {
+            // Rocks drawn by the StoryManager; here a few cracks in the floor
+            g.fillStyle(0x7a6a52, 1);
+            [[2, 7], [7, 3], [6, 7], [2, 4]].forEach(([x, y]) => g.fillRect(x * TILE + 6, y * TILE + 14, 20, 3));
+        } else if (style === "mart") {
+            drawWindow(g, TILE * 2.2, TILE * 0.4);
+            drawWindow(g, TILE * 6.3, TILE * 0.4);
+        } else if (style === "museum" || style === "gym-closed") {
+            drawWindow(g, TILE * 4.3, TILE * 0.4);
+        }
     }
 
     destroy() {

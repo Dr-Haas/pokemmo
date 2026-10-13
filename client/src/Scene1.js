@@ -8,6 +8,7 @@ import PewterJSON from "./assets/tilemaps/pewter.json";
 import PokemonCenterViridianJSON from "./assets/tilemaps/pokemon_center_viridian.json";
 import PokemonCenterPewterJSON from "./assets/tilemaps/pokemon_center_pewter.json";
 import HouseJSON from "./assets/tilemaps/house.json";
+import HallJSON from "./assets/tilemaps/hall.json";
 import TilesTown from "./assets/tilesets/tuxmon-sample-32px-extruded.png";
 
 import AtlasJSON from "./assets/atlas/atlas";
@@ -38,6 +39,7 @@ export class Scene1 extends Phaser.Scene {
         this.load.tilemapTiledJSON("pokemon_center_viridian", PokemonCenterViridianJSON);
         this.load.tilemapTiledJSON("pokemon_center_pewter", PokemonCenterPewterJSON);
         this.load.tilemapTiledJSON("house", HouseJSON);
+        this.load.tilemapTiledJSON("hall", HallJSON);
 
         // Load atlas
         this.load.atlas("currentPlayer", AtlasPNG, AtlasJSON);

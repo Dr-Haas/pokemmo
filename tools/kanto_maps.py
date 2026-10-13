@@ -454,6 +454,21 @@ def center_interior(town):
     return room
 
 
+def hall_interior():
+    """Empty room for the lab, gyms, marts and museum: same size and exit as a house,
+    only the walls are solid (the game draws the decor and places the props)."""
+    with open(os.path.join(MAPS_DIR, "house.json")) as f:
+        room = json.load(f)
+    width = room["width"]
+    for layer in room["layers"]:
+        if layer["name"] == "World":
+            layer["data"] = [
+                169 if (y < 2 or x in (0, width - 1)) else 0
+                for y in range(room["height"]) for x in range(width)
+            ]
+    return room
+
+
 def write(name, data):
     with open(os.path.join(MAPS_DIR, f"{name}.json"), "w") as f:
         json.dump(data, f, separators=(",", ":"))
@@ -471,6 +486,7 @@ def main():
         print(f"{m.name}: {m.w}x{m.h}")
     for town in ("viridian", "pewter"):
         write(f"pokemon_center_{town}", center_interior(town))
+    write("hall", hall_interior())
 
 
 if __name__ == "__main__":

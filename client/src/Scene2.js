@@ -9,6 +9,7 @@ import NpcManager from "./NpcManager";
 import FireRedBattleUI from "./ui/FireRedBattleUI";
 import PokemonCenterManager from "./PokemonCenterManager";
 import HouseInteriorManager, { findHouseDoors, tilemapKeyFor } from "./HouseInteriorManager";
+import StoryManager from "./StoryManager";
 import WildEncounterManager from "./WildEncounterManager";
 import { tickPlaySession } from "./state/gameState";
 import PlayerInteractionUI from "./ui/PlayerInteractionUI";
@@ -117,6 +118,8 @@ export class Scene2 extends Phaser.Scene {
         this.houseInteriorManager = new HouseInteriorManager(this);
         // Doors drawn on the map lead into houses, alongside the warps placed in Tiled.
         this.houseDoors = findHouseDoors(this);
+        // The adventure: Professor, rival, trainers, gym, shop.
+        this.storyManager = new StoryManager(this);
 
         // Meeting other players: their Pokédex, badges, and PvP battles.
         this.interactionUi = new PlayerInteractionUI(this);
@@ -211,6 +214,11 @@ export class Scene2 extends Phaser.Scene {
                 this.houseInteriorManager = null;
             }
 
+            if (this.storyManager) {
+                this.storyManager.destroy();
+                this.storyManager = null;
+            }
+
             if (this.socketTimerEvent) {
                 this.socketTimerEvent.remove(false);
                 this.socketTimerEvent = null;
@@ -262,6 +270,10 @@ export class Scene2 extends Phaser.Scene {
 
         if (this.pokemonCenterManager) {
             this.pokemonCenterManager.update();
+        }
+
+        if (this.storyManager) {
+            this.storyManager.update();
         }
 
         if (this.socialManager) {
@@ -438,7 +450,8 @@ export class Scene2 extends Phaser.Scene {
     }
 
     isDialogueOpen() {
-        return Boolean(this.dialogueUi && this.dialogueUi.isOpen());
+        return Boolean(this.dialogueUi && this.dialogueUi.isOpen())
+            || Boolean(this.storyManager && this.storyManager.isBusy());
     }
 
     isBattleOpen() {
