@@ -54,8 +54,9 @@ const COMMANDS = [
 const LAYOUT = {
     enemyHud: { x: 0.54, y: 0.07, width: 0.25, height: 0.17 },
     enemySlot: { x: 0.79, y: 0.40, platformWidth: 0.23, platformHeight: 0.09 },
-    playerSlot: { x: 0.26, y: 0.73, platformWidth: 0.28, platformHeight: 0.10 },
-    playerHud: { x: 0.08, y: 0.63, width: 0.29, height: 0.18 },
+    playerSlot: { x: 0.26, y: 0.66, platformWidth: 0.28, platformHeight: 0.10 },
+    // above the text box (it used to be hidden under it)
+    playerHud: { x: 0.56, y: 0.47, width: 0.29, height: 0.18 },
     messagePanel: { x: 16, y: 310, height: 124 },
     commandPanel: { width: 242, height: 124, margin: 16 },
     partyPanel: { x: 64, y: 48, width: 672, height: 340 }
@@ -119,6 +120,7 @@ export default class FireRedBattleUI {
         });
 
         this.createUi();
+        this.createTouchTargets();
         this.blinkVisible = true;
         this.blinkEvent = this.scene.time.addEvent({
             delay: 500,
@@ -298,6 +300,78 @@ export default class FireRedBattleUI {
         ].forEach((child) => this.root.add(child));
     }
 
+    /*
+     * Tap support for phones: tapping a command, a move, a Pokémon or the
+     * message box does the same as moving the cursor there and pressing A.
+     */
+    createTouchTargets() {
+        const width = this.scene.scale.width;
+        const commandX = width - LAYOUT.commandPanel.width - LAYOUT.commandPanel.margin;
+        const zone = (x, y, w, h, onTap) => {
+            // scrollFactor 0 on the object itself, so taps line up while the camera follows the player
+            const target = this.scene.add.rectangle(x, y, w, h, 0xffffff, 0.001)
+                .setOrigin(0)
+                .setScrollFactor(0)
+                .setInteractive()
+                .on("pointerdown", () => {
+                    if (this.visible) {
+                        onTap();
+                    }
+                });
+            this.root.add(target);
+            return target;
+        };
+
+        // Message box: next message
+        this.touchMessageZone = zone(LAYOUT.messagePanel.x, LAYOUT.messagePanel.y, commandX - (LAYOUT.messagePanel.x * 2), LAYOUT.messagePanel.height, () => {
+            if (this.phase === "message") {
+                this.pendingTouchConfirm = true;
+            }
+        });
+
+        // FIGHT / BAG / POKéMON / RUN (2 x 2 grid)
+        this.touchCommandZones = COMMANDS.map((command, index) => zone(
+            commandX + 8 + ((index % 2) * 116),
+            LAYOUT.messagePanel.y + 26 + (Math.floor(index / 2) * 40),
+            112,
+            38,
+            () => {
+                if (this.phase === "command") {
+                    this.commandIndex = index;
+                    this.pendingTouchConfirm = true;
+                }
+            }
+        ));
+
+        // Moves (4 rows)
+        this.touchMoveZones = Array.from({ length: 4 }, (_, index) => zone(
+            commandX + 4,
+            LAYOUT.messagePanel.y + 14 + (index * 22),
+            LAYOUT.commandPanel.width - 8,
+            22,
+            () => {
+                if (this.phase === "moves" && this.battle?.party[this.battle.activePartyIndex]?.moves[index]) {
+                    this.moveIndex = index;
+                    this.pendingTouchConfirm = true;
+                }
+            }
+        ));
+
+        // Party (6 rows)
+        this.touchPartyZones = Array.from({ length: 6 }, (_, index) => zone(
+            LAYOUT.partyPanel.x + 8,
+            LAYOUT.partyPanel.y + 52 + (index * 40),
+            LAYOUT.partyPanel.width - 16,
+            38,
+            () => {
+                if (this.phase === "party" && this.battle?.party[index]) {
+                    this.switchIndex = index;
+                    this.pendingTouchConfirm = true;
+                }
+            }
+        ));
+    }
+
     createSpriteSlot(side, x, y, platformWidth, platformHeight, platformColor) {
         const platform = this.scene.add.ellipse(x, y, platformWidth, platformHeight, platformColor).setAlpha(1);
         const sprite = this.scene.add.image(x, y - 8, "currentPlayer", side === "player" ? "misa-back" : "misa-front")
@@ -447,6 +521,18 @@ export default class FireRedBattleUI {
 
         this.refreshMessage();
         this.refreshCursor();
+        this.syncTouchTargets();
+    }
+
+    // Only the tap zones of the current step are active (some overlap on screen).
+    syncTouchTargets() {
+        if (!this.touchCommandZones) {
+            return;
+        }
+        this.touchMessageZone.setVisible(this.phase === "message");
+        this.touchCommandZones.forEach((zone) => zone.setVisible(this.phase === "command"));
+        this.touchMoveZones.forEach((zone) => zone.setVisible(this.phase === "moves"));
+        this.touchPartyZones.forEach((zone) => zone.setVisible(this.phase === "party"));
     }
 
     syncSlotVisual(slot, pokemon, textureKey, boundsKey) {
@@ -996,6 +1082,7 @@ export default class FireRedBattleUI {
     }
 
     endBattle() {
+        this.pendingTouchConfirm = false;
         this.visible = false;
         this.phase = "hidden";
         this.battle = null;
@@ -1083,6 +1170,10 @@ export default class FireRedBattleUI {
     }
 
     isConfirmPressed() {
+        if (this.pendingTouchConfirm) {
+            this.pendingTouchConfirm = false;
+            return true;
+        }
         return Phaser.Input.Keyboard.JustDown(this.keys.enter) || Phaser.Input.Keyboard.JustDown(this.keys.z);
     }
 
@@ -1266,3 +1357,6 @@ function canLoadImage(url) {
         image.src = url;
     });
 }
+
+// Shared with the PvP battle screen.
+export { getAnimatedSpriteUrl };

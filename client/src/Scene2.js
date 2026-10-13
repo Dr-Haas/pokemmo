@@ -10,6 +10,10 @@ import FireRedBattleUI from "./ui/FireRedBattleUI";
 import PokemonCenterManager from "./PokemonCenterManager";
 import WildEncounterManager from "./WildEncounterManager";
 import { tickPlaySession } from "./state/gameState";
+import PlayerInteractionUI from "./ui/PlayerInteractionUI";
+import PvpBattleUI from "./ui/PvpBattleUI";
+import SocialManager from "./multiplayer/SocialManager";
+import { startProfileSync } from "./multiplayer/profile";
 
 let cursors, socketKey;
 
@@ -95,6 +99,21 @@ export class Scene2 extends Phaser.Scene {
         this.npcManager = new NpcManager(this, this.dialogueUi);
         this.wildEncounterManager = new WildEncounterManager(this, this.battleUi);
         this.pokemonCenterManager = new PokemonCenterManager(this);
+
+        // Meeting other players: their Pokédex, badges, and PvP battles.
+        this.interactionUi = new PlayerInteractionUI(this);
+        this.pvpBattleUi = new PvpBattleUI(this, {
+            sendChoice: (choice) => room.then((currentRoom) => currentRoom.send("PVP_CHOICE", { choice })),
+            forfeit: () => room.then((currentRoom) => currentRoom.send("PVP_FORFEIT", {}))
+        });
+        this.socialManager = new SocialManager(this, { ui: this.interactionUi, pvpBattleUi: this.pvpBattleUi });
+        startProfileSync(room);
+
+        // The black band at the top of the screen (touch) opens / closes the menu.
+        this.onMenuRequest = () => this.toggleStartMenu();
+        window.addEventListener("pokemmo:menu", this.onMenuRequest);
+        this.menuBarElement = document.getElementById("menu-bar");
+
         room.then((currentRoom) => {
             if (this.isSceneShuttingDown) {
                 return;
@@ -118,6 +137,20 @@ export class Scene2 extends Phaser.Scene {
             if (this.roomMessageUnsubscribe) {
                 this.roomMessageUnsubscribe();
                 this.roomMessageUnsubscribe = null;
+            }
+
+            window.removeEventListener("pokemmo:menu", this.onMenuRequest);
+            if (this.socialManager) {
+                this.socialManager.destroy();
+                this.socialManager = null;
+            }
+            if (this.interactionUi) {
+                this.interactionUi.destroy();
+                this.interactionUi = null;
+            }
+            if (this.pvpBattleUi) {
+                this.pvpBattleUi.destroy();
+                this.pvpBattleUi = null;
             }
 
             Object.keys(onlinePlayers).forEach((sessionId) => {
@@ -208,8 +241,16 @@ export class Scene2 extends Phaser.Scene {
             this.pokemonCenterManager.update();
         }
 
-        if (this.menuUi && !this.isDialogueOpen() && !this.isBattleOpen()) {
+        if (this.socialManager) {
+            this.socialManager.update();
+        }
+
+        if (this.menuUi && !this.isDialogueOpen() && !this.isBattleOpen() && !this.isSocialOpen()) {
             this.menuUi.update();
+        }
+
+        if (this.menuBarElement && this.menuUi) {
+            this.menuBarElement.classList.toggle("is-open", this.menuUi.view !== "closed");
         }
 
         // Loop the player update method
@@ -336,9 +377,35 @@ export class Scene2 extends Phaser.Scene {
     isInterfaceOpen() {
         return this.isMapTransitioning
             || this.isBattleOpen()
+            || this.isSocialOpen()
             || this.isDialogueOpen()
             || Boolean(this.menuUi && this.menuUi.isBlockingGameplayInput())
             || Boolean(this.pokemonCenterManager && this.pokemonCenterManager.isBlockingGameplayInput());
+    }
+
+    isSocialOpen() {
+        return Boolean(this.socialManager && this.socialManager.isBusy());
+    }
+
+    toggleStartMenu() {
+        if (!this.menuUi) {
+            return;
+        }
+        if (this.menuUi.view === "start") {
+            this.menuUi.closeMenu();
+            return;
+        }
+        if (this.menuUi.view === "closed" && !this.isInterfaceOpen()) {
+            this.player?.body?.setVelocity(0);
+            this.menuUi.openStartMenu();
+        }
+    }
+
+    // A challenge arrives: close the menu so the player can answer.
+    closeOverlaysForChallenge() {
+        if (this.menuUi && this.menuUi.view !== "closed") {
+            this.menuUi.closeMenu();
+        }
     }
 
     isDialogueOpen() {
@@ -350,7 +417,15 @@ export class Scene2 extends Phaser.Scene {
     }
 
     handleRoomMessage(currentRoom, type, data) {
-        if (!type || !data) {
+        if (!type) {
+            return;
+        }
+
+        if (this.socialManager && this.socialManager.handleMessage(type, data || {})) {
+            return;
+        }
+
+        if (!data) {
             return;
         }
 

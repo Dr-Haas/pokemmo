@@ -193,4 +193,15 @@ export function setupTouchControls() {
 
     // No long-press menu, no double-tap zoom on the controls.
     pad.addEventListener("contextmenu", (event) => event.preventDefault());
+
+    // The black band at the top of the screen opens the game menu.
+    const menuBar = document.getElementById("menu-bar");
+    if (menuBar) {
+        menuBar.hidden = false;
+        menuBar.addEventListener("pointerdown", (event) => {
+            event.preventDefault();
+            vibrate();
+            window.dispatchEvent(new CustomEvent("pokemmo:menu"));
+        });
+    }
 }

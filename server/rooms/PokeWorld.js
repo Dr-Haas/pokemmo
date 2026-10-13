@@ -1,4 +1,5 @@
 const colyseus = require('colyseus');
+const { registerSocial } = require('./social');
 
 const DEFAULT_SPAWN = { map: 'town', x: 352, y: 1216 };
 const MAX_NAME_LENGTH = 12;
@@ -17,6 +18,9 @@ exports.PokeWorld = class extends colyseus.Room {
         console.log('ON CREATE');
         this.maxClients = 16;
         this.players = {};
+
+        // Profiles, challenges and PvP battles
+        registerSocial(this);
 
         this.onMessage("PLAYER_MOVED", (client, data) => {
             const player = this.players[client.sessionId];
@@ -118,6 +122,9 @@ exports.PokeWorld = class extends colyseus.Room {
     onLeave(client, consented) {
         const player = this.players[client.sessionId];
         console.log('ON LEAVE', player && player.name);
+
+        // Cancel pending challenges, the opponent wins a battle in progress.
+        this.onSocialLeave(client.sessionId);
 
         this.broadcast("PLAYER_LEFT", { sessionId: client.sessionId, map: player && player.map });
         delete this.players[client.sessionId];

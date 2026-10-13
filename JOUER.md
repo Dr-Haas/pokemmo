@@ -4,14 +4,20 @@ Version modifiée de PokeMMO pour jouer entre nous, sur ordinateur ou téléphon
 
 ## Ce qui a changé
 
-- **Mobile** : croix directionnelle, boutons A / B / START à l'écran (affichés seulement sur écran tactile). Le jeu s'adapte à la taille de l'écran, en paysage (plein écran) comme en portrait (style Game Boy).
+- **Mobile** : croix directionnelle et boutons A / B à l'écran (affichés seulement sur écran tactile). Le jeu s'adapte à la taille de l'écran, en paysage (plein écran) comme en portrait (style Game Boy). Vérifié aux tailles iPhone 15, 16 Pro et 17 Pro Max.
+- **Menu déroulant** : on touche la bande noire en haut de l'écran (onglet MENU), le menu descend. On peut toucher directement ses options.
+- **Entre joueurs** : en s'approchant d'un autre joueur, une bulle « A ÉCHANGER » apparaît. A ouvre un menu : voir son **Pokédex** (vus, pris, équipe), voir ses **badges**, ou le **défier en combat**.
+- **Combats PvP** : l'autre reçoit le défi et accepte ou refuse. Tour par tour, arbitré par le serveur pour que les deux écrans affichent la même chose. Attaque, changement de Pokémon, abandon. Les équipes sont soignées au début et rien n'est modifié après, comme les combats en link câble. Si un joueur se déconnecte, l'autre gagne.
+- **Combats au doigt** : commandes, attaques, choix du Pokémon et messages se touchent directement (combats sauvages aussi).
 - **Nom de dresseur** : demandé à la première ouverture, affiché au-dessus de chaque joueur et dans le menu.
 - **Partie privée** : avec la variable `GAME_CODE`, seuls ceux qui ont le lien `...?code=XXX` peuvent rejoindre.
 - **Une seule adresse** : le serveur Node sert aussi le jeu, donc un seul déploiement.
 - **Installable** sur l'écran d'accueil du téléphone (PWA).
 - Multi corrigé : position réelle envoyée à l'arrivée (on se voit au bon endroit même en reprenant une sauvegarde sur une autre carte), position finale envoyée à l'arrêt, joueurs séparés par salle.
 
-Contrôles clavier inchangés : flèches, `Z` (A), `X` (B), `Entrée` (START).
+Contrôles clavier inchangés : flèches, `Z` (A), `X` (B), `Entrée` (menu).
+
+Limite connue : le serveur fait confiance aux statistiques envoyées par chaque joueur (il borne les valeurs, sans recalculer à partir du Pokédex). Pour jouer entre nous, ça suffit.
 
 ## Lancer en local
 
@@ -36,9 +42,9 @@ Le code est mémorisé sur leur téléphone après la première ouverture.
 ## Installer sur le téléphone
 
 - **iPhone (Safari)** : bouton Partager > *Sur l'écran d'accueil*.
-- **Android (Chrome)** : menu ⋮ > *Installer l'application*.
+- **Android (Chrome)** : bouton *Installer l'app* sur l'écran du nom, ou menu ⋮ > *Installer l'application*.
 
-Le jeu s'ouvre alors en plein écran, comme une app.
+Le jeu s'ouvre alors en plein écran avec son icône, comme une app. L'écran du nom rappelle la marche à suivre sur iPhone. Chrome valide l'installabilité sans erreur (manifeste, icônes 180/192/512, service worker). Une nouvelle version déployée est prise au lancement suivant.
 
 ## Bon à savoir
 

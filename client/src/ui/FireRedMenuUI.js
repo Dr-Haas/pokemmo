@@ -207,16 +207,19 @@ export default class FireRedMenuUI {
         this.startMenuWidth = 220;
         this.startMenuHeight = 248;
         this.startMenuY = 28;
-        this.startMenuClosedX = this.scene.scale.width + 16;
-        this.startMenuOpenX = this.scene.scale.width - this.startMenuWidth - 20;
+        // The menu drops down from the top of the screen.
+        this.startMenuX = this.scene.scale.width - this.startMenuWidth - 20;
+        this.startMenuClosedY = -this.startMenuHeight - 16;
+        this.startMenuOpenY = this.startMenuY;
 
-        this.startContainer = this.scene.add.container(this.startMenuClosedX, this.startMenuY).setVisible(false);
+        this.startContainer = this.scene.add.container(this.startMenuX, this.startMenuClosedY).setVisible(false);
         this.startContainer.add(this.createPanelGraphics(this.startMenuWidth, this.startMenuHeight, COLORS.startBackground));
         this.startContainer.add(this.createDivider(16, 54, this.startMenuWidth - 32, COLORS.panelBorder));
         this.startName = this.createText(16, 18, "", 10);
         this.startCursor = this.createText(14, 78, "►", 10, COLORS.cursor);
         this.startLabels = MENU_OPTIONS.map((option, index) => {
             const label = this.createText(34, 78 + (index * 24), option.label, 10)
+                .setScrollFactor(0)
                 .setInteractive({ useHandCursor: true })
                 .on("pointerover", () => {
                     if (this.view !== "start") {
@@ -437,14 +440,14 @@ export default class FireRedMenuUI {
         this.startName.setText(this.state.player.name.toUpperCase());
         this.view = "start";
         this.startContainer.setVisible(true);
-        this.startContainer.x = this.startMenuClosedX;
+        this.startContainer.y = this.startMenuClosedY;
         this.refreshStartMenu();
         this.scene.tweens.killTweensOf(this.startContainer);
         this.scene.tweens.add({
             targets: this.startContainer,
-            x: this.startMenuOpenX,
-            duration: 100,
-            ease: "Linear"
+            y: this.startMenuOpenY,
+            duration: 260,
+            ease: "Back.easeOut"
         });
     }
 
@@ -458,16 +461,16 @@ export default class FireRedMenuUI {
         if (closingView === "start") {
             this.scene.tweens.add({
                 targets: this.startContainer,
-                x: this.startMenuClosedX,
-                duration: 100,
-                ease: "Linear",
+                y: this.startMenuClosedY,
+                duration: 160,
+                ease: "Cubic.easeIn",
                 onComplete: () => {
                     this.startContainer.setVisible(false);
                 }
             });
         } else {
             this.startContainer.setVisible(false);
-            this.startContainer.x = this.startMenuClosedX;
+            this.startContainer.y = this.startMenuClosedY;
         }
         this.messageContainer.setVisible(false);
         this.scene.input.keyboard.resetKeys();
@@ -477,7 +480,7 @@ export default class FireRedMenuUI {
         this.view = view;
         if (view !== "start") {
             this.startContainer.setVisible(false);
-            this.startContainer.x = this.startMenuClosedX;
+            this.startContainer.y = this.startMenuClosedY;
         }
         this.refreshVisibleView();
     }

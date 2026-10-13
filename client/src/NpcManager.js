@@ -16,7 +16,7 @@ export default class NpcManager {
         this.loadRequestId = 0;
 
         this.interactKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-        this.prompt = this.scene.add.text(0, 0, "Z PRAAT", {
+        this.prompt = this.scene.add.text(0, 0, "A  PARLER", {
             fontFamily: FONT_FAMILY,
             fontSize: "8px",
             color: "#fff4a3",

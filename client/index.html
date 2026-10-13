@@ -11,7 +11,7 @@
     <meta name="apple-mobile-web-app-title" content="PokeMMO">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/icon-192.png">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -151,39 +151,78 @@
       .btn-a { right: 0; top: 0; background: var(--btn-a); }
       .btn-b { left: 0; bottom: 0; background: var(--btn-b); }
 
-      .btn-start {
-        left: 50%;
-        transform: translateX(-50%);
-        bottom: calc(10px + var(--safe-b));
-        padding: 8px 16px;
-        border-radius: 14px;
+      /* ---------- Menu bar: the black band at the top of the screen ---------- */
+      #menu-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: calc(var(--safe-t) + 40px);
+        z-index: 11;
+        margin: 0;
+        padding: 0 0 6px;
+        border: none;
+        background: var(--bg);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        font: inherit;
+        color: var(--pad-glyph);
+        touch-action: manipulation;
+        cursor: pointer;
+      }
+      .menu-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 16px;
+        border-radius: 0 0 12px 12px;
         background: var(--pad);
         border: 2px solid var(--pad-edge);
+        border-top: none;
         font-size: 9px;
         letter-spacing: 1px;
-        color: var(--pad-glyph);
+        transition: transform 120ms;
       }
-      .btn-start.is-pressed {
-        transform: translateX(-50%) translateY(3px);
+      .menu-chevron {
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-top: 6px solid currentColor;
+        transition: transform 200ms;
       }
+      #menu-bar.is-open .menu-chevron { transform: rotate(180deg); }
+      #menu-bar:active .menu-tab { transform: translateY(2px); }
 
       /* Landscape: the controls float over the sides of the game. */
       @media (orientation: landscape) {
         .has-touch .dpad,
-        .has-touch .actions { opacity: 0.72; }
-        .has-touch .btn-start { opacity: 0.8; }
+        .has-touch .actions { opacity: 0.5; }
+        .has-touch .dpad { transform: scale(0.85); transform-origin: bottom left; }
+        .has-touch .actions { transform: scale(0.85); transform-origin: bottom right; }
+        /* No black band in landscape: the tab hangs over the top of the game. */
+        #menu-bar {
+          left: 50%;
+          right: auto;
+          width: 150px;
+          transform: translateX(-50%);
+          height: auto;
+          padding: 0;
+          background: transparent;
+          opacity: 0.85;
+        }
       }
 
       /* Portrait: game on top, Game Boy style controls underneath. */
       @media (orientation: portrait) {
         .has-touch #game-container {
           bottom: auto;
-          height: min(58vh, calc(100vw * 9 / 16 + 24px));
-          top: var(--safe-t);
+          height: min(58vh, calc(100vw * 9 / 16 + 8px));
+          top: calc(var(--safe-t) + 40px);
         }
         .has-touch .dpad,
-        .has-touch .actions { bottom: calc(70px + var(--safe-b)); }
-        .has-touch .btn-start { bottom: calc(24px + var(--safe-b)); }
+        .has-touch .actions { bottom: calc(48px + var(--safe-b)); }
         .has-touch .rotate-hint { display: block; }
       }
 
@@ -192,7 +231,7 @@
         position: fixed;
         left: 0;
         right: 0;
-        top: calc(min(58vh, calc(100vw * 9 / 16 + 24px)) + 28px + var(--safe-t));
+        top: calc(min(58vh, calc(100vw * 9 / 16 + 8px)) + 68px + var(--safe-t));
         margin: 0;
         text-align: center;
         font-size: 8px;
@@ -251,6 +290,18 @@
         box-shadow: 0 4px 0 #8f1f33;
       }
 
+      .card .install-hint {
+        margin: 16px 0 0;
+        font-size: 8px;
+        line-height: 1.9;
+        color: #6a6d8b;
+      }
+      .card .install-button {
+        background: var(--pad);
+        box-shadow: 0 4px 0 #0b0c18;
+        font-size: 10px;
+      }
+
       #connection-error {
         position: fixed;
         top: calc(8px + var(--safe-t));
@@ -282,8 +333,8 @@
         <button class="btn btn-round btn-a" data-key="a">A</button>
         <button class="btn btn-round btn-b" data-key="b">B</button>
       </div>
-      <button class="btn btn-start" data-key="start">START</button>
     </div>
+    <button id="menu-bar" type="button" hidden aria-label="Ouvrir le menu"><span class="menu-tab"><span class="menu-chevron"></span>MENU</span></button>
     <p class="rotate-hint">Tourne ton téléphone<br>pour jouer en plein écran</p>
 
     <div id="name-screen" class="overlay" hidden>
@@ -292,6 +343,8 @@
         <p>C'est le nom que les autres joueurs verront au-dessus de ta tête.</p>
         <input name="name" type="text" placeholder="Sacha" enterkeyhint="go" autocapitalize="words" spellcheck="false">
         <button type="submit">Jouer</button>
+        <p class="install-hint" id="install-hint" hidden></p>
+        <button type="button" class="install-button" id="install-button" hidden>Installer l'app</button>
       </form>
     </div>
 
