@@ -7,6 +7,7 @@ import PokemonCenterCrysthavenJSON from "./assets/tilemaps/pokemon_center_crysth
 import PokemonCenterTownJSON from "./assets/tilemaps/pokemon_center_town.json";
 import Route1JSON from "./assets/tilemaps/route1.json";
 import Route2JSON from "./assets/tilemaps/route2.json";
+import HouseJSON from "./assets/tilemaps/house.json";
 import TilesTown from "./assets/tilesets/tuxmon-sample-32px-extruded.png";
 
 import AtlasJSON from "./assets/atlas/atlas";
@@ -34,6 +35,7 @@ export class Scene1 extends Phaser.Scene {
         this.load.tilemapTiledJSON("pokemon_center_town", PokemonCenterTownJSON);
         this.load.tilemapTiledJSON("pokemon_center_ashveld", PokemonCenterAshveldJSON);
         this.load.tilemapTiledJSON("pokemon_center_crysthaven", PokemonCenterCrysthavenJSON);
+        this.load.tilemapTiledJSON("house", HouseJSON);
 
         // Load atlas
         this.load.atlas("currentPlayer", AtlasPNG, AtlasJSON);

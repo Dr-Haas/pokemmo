@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { room, getPlayerName } from './SocketServer';
 import { NICKNAME_STYLE } from "./constants/nickname";
 import { ENTITY_SIZE } from "./constants/entity";
+import { houseExitFor, isHouseMap } from "./HouseInteriorManager";
 
 
 export default class Player extends Phaser.GameObjects.Sprite {
@@ -156,9 +157,19 @@ export default class Player extends Phaser.GameObjects.Sprite {
 
         const worldLayer = this.scene.map.getObjectLayer("Worlds");
         const interactionPoint = this.getInteractionPoint();
-        const world = (worldLayer?.objects || []).find((entry) => this.isInsideObject(interactionPoint, entry));
+        const worlds = [...(worldLayer?.objects || []), ...(this.scene.houseDoors || [])];
+        const world = worlds.find((entry) => this.isInsideObject(interactionPoint, entry));
 
         if (!world) {
+            return;
+        }
+
+        // Leaving a house: back outside, in front of the door we came in by.
+        if (world.name === "__exit__" && isHouseMap(this.scene.mapName)) {
+            const exit = houseExitFor(this.scene.mapName);
+            this.scene.playerTexturePosition = exit.playerTexturePosition;
+            this.scene.transitionToMap(exit);
+            room.then((room) => room.send("PLAYER_CHANGED_MAP", { map: exit.map }));
             return;
         }
 

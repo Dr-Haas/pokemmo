@@ -8,6 +8,7 @@ import FireRedDialogueUI from "./ui/FireRedDialogueUI";
 import NpcManager from "./NpcManager";
 import FireRedBattleUI from "./ui/FireRedBattleUI";
 import PokemonCenterManager from "./PokemonCenterManager";
+import HouseInteriorManager, { findHouseDoors, tilemapKeyFor } from "./HouseInteriorManager";
 import WildEncounterManager from "./WildEncounterManager";
 import { tickPlaySession } from "./state/gameState";
 import PlayerInteractionUI from "./ui/PlayerInteractionUI";
@@ -38,7 +39,8 @@ export class Scene2 extends Phaser.Scene {
     }
 
     create() {
-        this.map = this.make.tilemap({key: this.mapName});
+        // Houses share one tilemap; their map name also says which house it is.
+        this.map = this.make.tilemap({key: tilemapKeyFor(this.mapName)});
 
         console.log("this.mapName",this.mapName);
         console.log("this.map",this.map);
@@ -84,7 +86,15 @@ export class Scene2 extends Phaser.Scene {
 
         const camera = this.cameras.main;
         camera.startFollow(this.player);
-        camera.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+        // Rooms smaller than the screen (houses, Pokémon Centers) are centered instead of stuck top-left.
+        const boundsWidth = Math.max(this.map.widthInPixels, camera.width);
+        const boundsHeight = Math.max(this.map.heightInPixels, camera.height);
+        camera.setBounds(
+            (this.map.widthInPixels - boundsWidth) / 2,
+            (this.map.heightInPixels - boundsHeight) / 2,
+            boundsWidth,
+            boundsHeight
+        );
         camera.fadeIn(300, 0, 0, 0);
 
         cursors = this.input.keyboard.createCursorKeys();
@@ -104,6 +114,9 @@ export class Scene2 extends Phaser.Scene {
         this.npcManager = new NpcManager(this, this.dialogueUi);
         this.wildEncounterManager = new WildEncounterManager(this, this.battleUi);
         this.pokemonCenterManager = new PokemonCenterManager(this);
+        this.houseInteriorManager = new HouseInteriorManager(this);
+        // Doors drawn on the map lead into houses, alongside the warps placed in Tiled.
+        this.houseDoors = findHouseDoors(this);
 
         // Meeting other players: their Pokédex, badges, and PvP battles.
         this.interactionUi = new PlayerInteractionUI(this);
@@ -191,6 +204,11 @@ export class Scene2 extends Phaser.Scene {
             if (this.pokemonCenterManager) {
                 this.pokemonCenterManager.destroy();
                 this.pokemonCenterManager = null;
+            }
+
+            if (this.houseInteriorManager) {
+                this.houseInteriorManager.destroy();
+                this.houseInteriorManager = null;
             }
 
             if (this.socketTimerEvent) {
