@@ -57,10 +57,11 @@ export class Scene1 extends Phaser.Scene {
     async bootstrapGame() {
         this.loadingText.setText("Chargement du jeu...\nTéléchargement du Pokédex de Kanto");
 
+        // Log in first: the account's game must be on this device before the game reads it.
+        await nameReady;
         await Promise.all([
             initializeGameState(),
-            waitForPixelFont(),
-            nameReady
+            waitForPixelFont()
         ]);
 
         // The trainer card and menus use the name chosen on the name screen.

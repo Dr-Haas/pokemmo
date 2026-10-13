@@ -1,4 +1,4 @@
-const GAME_STATE_STORAGE_KEY = "pokemmo.game-state.v3";
+export const GAME_STATE_STORAGE_KEY = "pokemmo.game-state.v3";
 const POKEMON_CACHE_STORAGE_KEY = "pokemmo.pokemon-cache.v3";
 const MOVE_CACHE_STORAGE_KEY = "pokemmo.move-cache.v3";
 const SAVE_SLOT_PREFIX = "save_slot_";
@@ -1144,12 +1144,22 @@ export async function initializeGameState() {
     return getGameState();
 }
 
-export function persistGameState() {
-    persistJson(GAME_STATE_STORAGE_KEY, {
+// Told every time the game is written to the device (the account copies it to the server).
+const persistListeners = new Set();
+
+export function onGamePersisted(listener) {
+    persistListeners.add(listener);
+    return () => persistListeners.delete(listener);
+}
+
+export function persistGameState({ manual = false } = {}) {
+    const record = {
         version: SAVE_DATA_VERSION,
         timestamp: Date.now(),
         gameState: cloneGameState()
-    });
+    };
+    persistJson(GAME_STATE_STORAGE_KEY, record);
+    persistListeners.forEach((listener) => listener(record, { manual }));
 }
 
 export function getGameState() {
@@ -1779,7 +1789,7 @@ export function saveGame() {
     };
 
     persistJson(`${SAVE_SLOT_PREFIX}${gameState.saveSlot}`, saveData);
-    persistGameState();
+    persistGameState({ manual: true });
     return saveData;
 }
 

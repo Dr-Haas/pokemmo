@@ -1,5 +1,6 @@
 const colyseus = require('colyseus');
 const { registerSocial } = require('./social');
+const accounts = require('../services/accounts');
 
 const DEFAULT_SPAWN = { map: 'town', x: 656, y: 1150 };
 const MAX_NAME_LENGTH = 12;
@@ -73,6 +74,7 @@ exports.PokeWorld = class extends colyseus.Room {
             }
 
             player.character = cleanCharacter(data.character);
+            accounts.updateProfile(this.userIds[client.sessionId], { character: player.character });
             this.broadcast("PLAYER_CHANGED_CHARACTER", { ...player }, { except: client });
         });
 
@@ -114,25 +116,26 @@ exports.PokeWorld = class extends colyseus.Room {
 
     // Optional private access: set GAME_CODE on the server and share
     // the game link with ?code=... so only your friends can join.
+    // Only logged-in players can join; their name and character come from their account.
     onAuth(client, options) {
-        const expected = process.env.GAME_CODE;
-        if (!expected) {
-            return true;
+        const user = accounts.userFromToken(options && options.token);
+        if (!user) {
+            throw new colyseus.ServerError(401, 'Connexion requise');
         }
-        if (options && options.code === expected) {
-            return true;
-        }
-        throw new colyseus.ServerError(401, 'Code de partie invalide');
+        return user;
     }
 
-    onJoin(client, options) {
-        const name = cleanName(options && options.name);
+    onJoin(client, options, user) {
+        const name = cleanName(user.name);
         console.log('ON JOIN', name);
+        // Kept apart from this.players, which is sent to every client.
+        this.userIds = this.userIds || {};
+        this.userIds[client.sessionId] = user.id;
 
         this.players[client.sessionId] = {
             sessionId: client.sessionId,
             name,
-            character: cleanCharacter(options && options.character),
+            character: cleanCharacter(user.character),
             ...DEFAULT_SPAWN
         };
         // Others see this player once it sends PLAYER_READY with its real position.
@@ -147,6 +150,9 @@ exports.PokeWorld = class extends colyseus.Room {
 
         this.broadcast("PLAYER_LEFT", { sessionId: client.sessionId, map: player && player.map });
         delete this.players[client.sessionId];
+        if (this.userIds) {
+            delete this.userIds[client.sessionId];
+        }
     }
 
     onDispose() {

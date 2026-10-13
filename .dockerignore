@@ -5,3 +5,4 @@ server/.env
 server/.molroo-npc-cache.json
 docs
 .env
+server/data

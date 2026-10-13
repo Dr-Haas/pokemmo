@@ -245,13 +245,14 @@
         position: fixed;
         inset: 0;
         z-index: 20;
-        display: grid;
-        place-items: center;
+        display: flex;
+        overflow-y: auto;
         background: rgba(15, 16, 32, 0.88);
         padding: 16px;
       }
 
       .card {
+        margin: auto;
         width: min(340px, 100%);
         box-sizing: border-box;
         background: #f4f1e8;
@@ -290,6 +291,20 @@
         box-shadow: 0 4px 0 #8f1f33;
       }
 
+      .card input + input { margin-top: 10px; }
+      .card[data-mode="login"] .register-only,
+      .card[data-mode="register"] .login-only { display: none; }
+      .card .auth-error { margin: 12px 0 0; color: #c0283f; }
+      .card .auth-switch {
+        background: transparent;
+        box-shadow: none;
+        color: #4a4d6b;
+        font-size: 8px;
+        margin-top: 10px;
+        padding: 8px;
+        text-decoration: underline;
+      }
+      .card button:disabled { opacity: 0.6; }
       .card .character-title { margin: 16px 0 8px; }
       .character-grid {
         display: grid;
@@ -369,13 +384,23 @@
     <p class="rotate-hint">Tourne ton téléphone<br>pour jouer en plein écran</p>
 
     <div id="name-screen" class="overlay" hidden>
-      <form class="card" autocomplete="off">
-        <h1>Ton nom de dresseur</h1>
-        <p>C'est le nom que les autres joueurs verront au-dessus de ta tête.</p>
-        <input name="name" type="text" placeholder="Sacha" enterkeyhint="go" autocapitalize="words" spellcheck="false">
-        <p class="character-title">Ton personnage</p>
-        <div class="character-grid" role="radiogroup" aria-label="Ton personnage"></div>
-        <button type="submit">Jouer</button>
+      <form class="card" data-mode="login" novalidate>
+        <h1 class="login-only">Connexion</h1>
+        <h1 class="register-only">Nouveau dresseur</h1>
+        <p class="login-only">Retrouve ta partie sur n'importe quel appareil.</p>
+        <p class="register-only">Ton nom s'affiche au-dessus de ta tête pour les autres joueurs.</p>
+        <input class="register-only" name="name" type="text" placeholder="Nom de dresseur" autocomplete="nickname" autocapitalize="words" spellcheck="false">
+        <input name="email" type="email" placeholder="E-mail" autocomplete="email" autocapitalize="off" spellcheck="false">
+        <input name="password" type="password" placeholder="Mot de passe" autocomplete="current-password" enterkeyhint="go">
+        <div class="register-only">
+          <p class="character-title">Ton personnage</p>
+          <div class="character-grid" role="radiogroup" aria-label="Ton personnage"></div>
+        </div>
+        <p class="auth-error" role="alert" hidden></p>
+        <button type="submit" class="login-only">Se connecter</button>
+        <button type="submit" class="register-only">Créer mon compte</button>
+        <button type="button" class="auth-switch login-only" data-switch="register">Pas de compte ? Créer un compte</button>
+        <button type="button" class="auth-switch register-only" data-switch="login">J'ai déjà un compte</button>
         <p class="install-hint" id="install-hint" hidden></p>
         <button type="button" class="install-button" id="install-button" hidden>Installer l'app</button>
       </form>

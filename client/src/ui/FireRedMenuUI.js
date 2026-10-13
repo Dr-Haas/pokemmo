@@ -16,6 +16,7 @@ import {
 import { bagCategoryLabel, mapLabel, moveCategoryLabel, natureLabel, statusLabel, typeLabel, typesLabel } from "../i18n";
 import { CHARACTERS, CHARACTER_ATLAS, standingFrame } from "../characters";
 import { getPlayerCharacter, setPlayerCharacter } from "../playerName";
+import { logout } from "../account";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const MENU_OPTIONS = [
@@ -24,6 +25,7 @@ const MENU_OPTIONS = [
     { id: "bag", label: "Sac" },
     { id: "save", label: "Sauver" },
     { id: "option", label: "Options" },
+    { id: "logout", label: "Déconnexion" },
     { id: "exit", label: "Quitter" }
 ];
 const PARTY_ACTIONS = ["Summary", "Switch", "Item", "Cancel"];
@@ -616,6 +618,12 @@ export default class FireRedMenuUI {
     activateStartOption(option) {
         if (option === "exit") {
             this.closeMenu();
+            return;
+        }
+        if (option === "logout") {
+            // The game is sent to the server first, then the login screen comes back.
+            this.closeMenu();
+            logout().finally(() => window.location.reload());
             return;
         }
         if (option === "pokemon") {

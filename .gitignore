@@ -16,3 +16,6 @@ dist/
 
 # Secrets
 .env
+
+# Accounts database
+server/data/

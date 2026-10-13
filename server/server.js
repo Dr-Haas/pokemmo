@@ -9,12 +9,15 @@ const colyseus = require('colyseus');
 
 const PokeWorld = require('./rooms/PokeWorld').PokeWorld;
 const npcRoutes = require("./routes/npcs");
+const authRoutes = require("./routes/auth");
 const npcEmotionService = require("./services/npcEmotionService");
 
 const port = process.env.PORT || 3000;
 const app = express()
 
 app.use(cors());
+// Accounts and saves first: they parse their own (bigger) request bodies.
+app.use("/api", authRoutes);
 app.use(express.json());
 app.use("/api", npcRoutes);
 

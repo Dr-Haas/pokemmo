@@ -1,6 +1,7 @@
 import * as Colyseus from "colyseus.js";
 import { SERVER_URL } from "./config";
-import { askPlayerName, getPlayerCharacter } from "./playerName";
+import { askPlayerName } from "./playerName";
+import { getAuthToken } from "./account";
 
 /*================================================
 | Array with current online players
@@ -21,7 +22,8 @@ const nameReady = askPlayerName().then((name) => {
 });
 
 const room = nameReady
-    .then((name) => client.joinOrCreate("poke_world", { name, character: getPlayerCharacter(), code: getGameCode() }))
+    // The server takes the name and character from the account behind the token.
+    .then(() => client.joinOrCreate("poke_world", { token: getAuthToken() }))
     .then((joinedRoom) => {
         console.log(joinedRoom.sessionId, "joined", joinedRoom.name);
         return joinedRoom;
@@ -29,27 +31,11 @@ const room = nameReady
     .catch((e) => {
         console.log("JOIN ERROR", e);
         showConnectionError(e && e.code === 401
-            ? "Code de partie manquant ou faux. Ouvre le lien qu'on t'a envoyé."
+            ? "Session expirée : recharge la page pour te reconnecter."
             : null);
         // Never resolve, so the rest of the game simply plays offline.
         return new Promise(() => {});
     });
-
-/*------------------------------------------------
-| Private game code: opened once with ?code=..., then remembered.
-*/
-function getGameCode() {
-    const fromUrl = new URLSearchParams(window.location.search).get("code");
-    try {
-        if (fromUrl) {
-            window.localStorage.setItem("pokemmo.gameCode", fromUrl);
-            return fromUrl;
-        }
-        return window.localStorage.getItem("pokemmo.gameCode") || "";
-    } catch (e) {
-        return fromUrl || "";
-    }
-}
 
 function getPlayerName() {
     return playerName || "Dresseur";

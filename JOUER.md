@@ -56,6 +56,11 @@ Le jeu a besoin d'un serveur Node qui tourne en continu avec des WebSockets : il
 
 Mettre à jour : `git pull && docker compose up -d --build`. Logs : `docker compose logs -f game`.
 
+Les comptes et les sauvegardes sont dans le volume Docker `pokemmo_game_data` (fichier SQLite `pokemmo.db`). Copie de secours :
+```bash
+docker compose exec game sh -c 'cp /data/pokemmo.db /data/backup-$(date +%F).db'
+```
+
 ## Installer sur le téléphone
 
 - **iPhone (Safari)** : bouton Partager > *Sur l'écran d'accueil*.

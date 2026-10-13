@@ -1,12 +1,15 @@
 /*================================================
-| Asks the player for a name and a character once, remembers them on the device.
+| Start screen: log in, or create an account (trainer name + character).
+| The account keeps the game on the server, see account.js.
 | Uses the #name-screen form declared in index.html.
 */
 import PlayersAtlasJSON from "./assets/atlas/players";
 import PlayersAtlasPNG from "./assets/images/players/players.png";
-import { CHARACTERS, DEFAULT_CHARACTER, characterOrDefault, isCharacter } from "./characters";
+import { CHARACTERS, DEFAULT_CHARACTER, characterOrDefault } from "./characters";
+import { login, register, rememberCharacter, resumeSession, startSaveSync } from "./account";
 
-const STORAGE_KEY = "pokemmo.playerName";
+// Name and character from before accounts existed: offered when creating the account.
+const LEGACY_NAME_KEY = "pokemmo.playerName";
 const CHARACTER_KEY = "pokemmo.playerCharacter";
 const MAX_LENGTH = 12;
 
@@ -36,10 +39,11 @@ export function getPlayerCharacter() {
     return chosenCharacter;
 }
 
-/** Changed from the in-game menu: remembered on the device. */
+/** Changed from the in-game menu: the server also saves it on the account. */
 export function setPlayerCharacter(id) {
     chosenCharacter = characterOrDefault(id);
     store(CHARACTER_KEY, chosenCharacter);
+    rememberCharacter(chosenCharacter);
     return chosenCharacter;
 }
 
@@ -96,48 +100,98 @@ function buildCharacterPicker(container) {
     select(chosenCharacter);
 }
 
-export function askPlayerName() {
-    const storedName = cleanName(readStored(STORAGE_KEY));
-    const hasCharacter = isCharacter(readStored(CHARACTER_KEY));
+function useAccount(user) {
+    chosenCharacter = characterOrDefault(user.character);
+    store(CHARACTER_KEY, chosenCharacter);
+    startSaveSync();
+    return user.name;
+}
+
+/** Resolves with the trainer name once the player is logged in and their game is on this device. */
+export async function askPlayerName() {
     const screen = document.getElementById("name-screen");
 
-    if ((storedName && hasCharacter) || !screen) {
-        return Promise.resolve(storedName || `Dresseur${Math.floor(Math.random() * 900 + 100)}`);
+    try {
+        const user = await resumeSession();
+        if (user) {
+            return useAccount(user);
+        }
+    } catch (error) {
+        // Server unreachable: the screen below shows the error when they try to log in.
     }
 
     const form = screen.querySelector("form");
-    const input = screen.querySelector("input");
-    input.maxLength = MAX_LENGTH;
-    input.value = storedName;
-    buildCharacterPicker(screen.querySelector(".character-grid"));
+    const fields = {
+        name: form.elements.name,
+        email: form.elements.email,
+        password: form.elements.password
+    };
+    const errorText = form.querySelector(".auth-error");
+    const submitButtons = form.querySelectorAll("button[type=submit]");
+
+    fields.name.maxLength = MAX_LENGTH;
+    fields.name.value = cleanName(readStored(LEGACY_NAME_KEY));
+    buildCharacterPicker(form.querySelector(".character-grid"));
+
+    const setMode = (mode) => {
+        form.dataset.mode = mode;
+        fields.password.autocomplete = mode === "register" ? "new-password" : "current-password";
+        errorText.hidden = true;
+    };
+    // Someone who already played here before accounts existed most likely wants to create one.
+    setMode(readStored(LEGACY_NAME_KEY) && !readStored("pokemmo.saveOwner") ? "register" : "login");
+    form.querySelectorAll("[data-switch]").forEach((button) => {
+        button.addEventListener("click", () => setMode(button.dataset.switch));
+    });
 
     // Keep the game from swallowing letters like Z, X, A, W, S, D while typing.
-    ["keydown", "keyup"].forEach((type) => input.addEventListener(type, (event) => event.stopPropagation()));
+    Object.values(fields).forEach((input) => {
+        ["keydown", "keyup"].forEach((type) => input.addEventListener(type, (event) => event.stopPropagation()));
+    });
     // Phaser cancels touches that end outside its canvas, which stops phones from focusing the
-    // field and opening the keyboard: keep this screen's touches away from it.
+    // fields and opening the keyboard: keep this screen's touches away from it.
     ["touchstart", "touchmove", "touchend", "touchcancel"].forEach((type) => {
         screen.addEventListener(type, (event) => event.stopPropagation(), { passive: true });
     });
 
     screen.hidden = false;
-    // Let the game canvas render behind, then focus the field (desktop; phones wait for a tap).
-    if (!storedName) {
-        setTimeout(() => input.focus(), 50);
-    }
 
     return new Promise((resolve) => {
-        form.addEventListener("submit", (event) => {
+        form.addEventListener("submit", async (event) => {
             event.preventDefault();
-            const name = cleanName(input.value);
-            if (!name) {
-                input.focus();
+            errorText.hidden = true;
+            const registering = form.dataset.mode === "register";
+            const email = fields.email.value.trim();
+            const password = fields.password.value;
+            const name = cleanName(fields.name.value);
+
+            if (registering && !name) {
+                showError("Choisis un nom de dresseur.");
                 return;
             }
-            store(STORAGE_KEY, name);
-            store(CHARACTER_KEY, chosenCharacter || DEFAULT_CHARACTER);
-            screen.hidden = true;
-            input.blur();
-            resolve(name);
+            if (!email || !password) {
+                showError("Entre ton e-mail et ton mot de passe.");
+                return;
+            }
+
+            submitButtons.forEach((button) => { button.disabled = true; });
+            try {
+                const user = registering
+                    ? await register({ email, password, name, character: chosenCharacter || DEFAULT_CHARACTER })
+                    : await login(email, password);
+                screen.hidden = true;
+                document.activeElement?.blur?.();
+                resolve(useAccount(user));
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                submitButtons.forEach((button) => { button.disabled = false; });
+            }
         });
     });
+
+    function showError(message) {
+        errorText.textContent = message;
+        errorText.hidden = false;
+    }
 }
