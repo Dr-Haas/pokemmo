@@ -505,6 +505,11 @@ export class Scene2 extends Phaser.Scene {
             return;
         }
 
+        if (type === "PLAYER_CHANGED_CHARACTER") {
+            this.ensureOnlinePlayer(data);
+            return;
+        }
+
         if (type === "PLAYER_CHANGED_MAP") {
             if (data.map !== this.mapName) {
                 this.destroyOnlinePlayer(data.sessionId);

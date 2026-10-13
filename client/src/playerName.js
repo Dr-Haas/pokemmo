@@ -36,6 +36,13 @@ export function getPlayerCharacter() {
     return chosenCharacter;
 }
 
+/** Changed from the in-game menu: remembered on the device. */
+export function setPlayerCharacter(id) {
+    chosenCharacter = characterOrDefault(id);
+    store(CHARACTER_KEY, chosenCharacter);
+    return chosenCharacter;
+}
+
 function atlasFrame(filename) {
     for (const texture of PlayersAtlasJSON.textures || []) {
         const entry = texture.frames.find((frame) => frame.filename === filename);

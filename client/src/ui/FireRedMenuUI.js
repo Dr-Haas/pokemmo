@@ -14,6 +14,8 @@ import {
     useBagItem
 } from "../state/gameState";
 import { bagCategoryLabel, mapLabel, moveCategoryLabel, natureLabel, statusLabel, typeLabel, typesLabel } from "../i18n";
+import { CHARACTERS, CHARACTER_ATLAS, standingFrame } from "../characters";
+import { getPlayerCharacter, setPlayerCharacter } from "../playerName";
 
 const FONT_FAMILY = "\"Press Start 2P\"";
 const MENU_OPTIONS = [
@@ -40,8 +42,16 @@ const OPTION_FIELDS = [
     { key: "battleStyle", label: "Style combat", values: ["shift", "set"] },
     { key: "sound", label: "Son", values: ["mono", "stereo"] },
     { key: "buttonMode", label: "Touches", values: ["normal", "LR", "LA"] },
-    { key: "pokedexLanguage", label: "Langue Pokédex", values: ["fr", "en", "de"] }
+    { key: "pokedexLanguage", label: "Langue Pokédex", values: ["fr", "en", "de"] },
+    // Not a saved game option: the character lives with the player name, on the device.
+    {
+        key: "character",
+        label: "Personnage",
+        values: CHARACTERS.map((character) => character.id),
+        format: (value) => (CHARACTERS.find((character) => character.id === value)?.label || value).toUpperCase()
+    }
 ];
+const OPTION_ROW_HEIGHT = 38;
 const ITEM_EFFECT_LABELS = {
     heal_hp: "Soin PV",
     heal_status: "Soin statut",
@@ -412,10 +422,25 @@ export default class FireRedMenuUI {
         this.optionsContainer.add(this.createPanelGraphics(560, 360, COLORS.panelBackground));
         this.optionsContainer.add(this.createText(20, 14, "OPTIONS", 10));
         this.optionCursor = this.createText(16, 66, "►", 8, COLORS.cursor);
-        this.optionLabels = OPTION_FIELDS.map((field, index) => this.createText(42, 66 + (index * 46), field.label, 8));
-        this.optionValues = OPTION_FIELDS.map((field, index) => this.createText(360, 66 + (index * 46), "", 8));
+        this.optionLabels = OPTION_FIELDS.map((field, index) => this.createText(42, 66 + (index * OPTION_ROW_HEIGHT), field.label, 8));
+        this.optionValues = OPTION_FIELDS.map((field, index) => this.createText(360, 66 + (index * OPTION_ROW_HEIGHT), "", 8));
+        // Tapping a row changes its value, like pressing RIGHT on it.
+        [...this.optionLabels, ...this.optionValues].forEach((text, i) => {
+            const index = i % OPTION_FIELDS.length;
+            text.setInteractive({ useHandCursor: true }).on("pointerdown", () => {
+                if (this.view !== "options") {
+                    return;
+                }
+                this.optionIndex = index;
+                this.cycleOption(1);
+            });
+        });
+        const characterRow = OPTION_FIELDS.findIndex((field) => field.key === "character");
+        this.optionCharacterSprite = this.scene.add.image(500, 70 + (characterRow * OPTION_ROW_HEIGHT), CHARACTER_ATLAS, standingFrame(getPlayerCharacter(), "front"))
+            .setOrigin(0.5)
+            .setScale(1.5);
         this.optionFooter = this.createText(20, 326, "GAUCHE/DROITE : CHANGER  X : RETOUR", 8);
-        this.optionsContainer.add([this.optionCursor, ...this.optionLabels, ...this.optionValues, this.optionFooter]);
+        this.optionsContainer.add([this.optionCursor, ...this.optionLabels, ...this.optionValues, this.optionCharacterSprite, this.optionFooter]);
         this.root.add(this.optionsContainer);
     }
 
@@ -929,12 +954,23 @@ export default class FireRedMenuUI {
         }
     }
 
+    optionValue(field) {
+        return field.key === "character" ? getPlayerCharacter() : this.state.options[field.key];
+    }
+
     cycleOption(direction) {
         const field = OPTION_FIELDS[this.optionIndex];
-        const currentValue = this.state.options[field.key];
+        const currentValue = this.optionValue(field);
         const currentIndex = field.values.findIndex((value) => value === currentValue);
         const nextIndex = Phaser.Math.Wrap(currentIndex + direction, 0, field.values.length);
-        updateOption(field.key, field.values[nextIndex]);
+        if (field.key === "character") {
+            const character = setPlayerCharacter(field.values[nextIndex]);
+            if (this.scene.player) {
+                this.scene.player.setCharacter(character);
+            }
+        } else {
+            updateOption(field.key, field.values[nextIndex]);
+        }
         this.refreshOptionView();
     }
 
@@ -1220,9 +1256,10 @@ export default class FireRedMenuUI {
 
     refreshOptionView() {
         this.optionCursor.setVisible(this.cursorVisible);
-        this.optionCursor.y = 66 + (this.optionIndex * 46);
+        this.optionCursor.y = 66 + (this.optionIndex * OPTION_ROW_HEIGHT);
+        this.optionCharacterSprite.setFrame(standingFrame(getPlayerCharacter(), "front"));
         OPTION_FIELDS.forEach((field, index) => {
-            const value = this.state.options[field.key];
+            const value = this.optionValue(field);
             const formattedValue = field.format ? field.format(value) : (OPTION_VALUE_LABELS[value] || String(value).toUpperCase());
             this.optionLabels[index].setColor(index === this.optionIndex ? COLORS.cursor : COLORS.text);
             this.optionValues[index].setText(formattedValue);

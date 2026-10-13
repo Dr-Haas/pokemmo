@@ -122,6 +122,13 @@ export default class Player extends Phaser.GameObjects.Sprite {
         }
     }
 
+    setCharacter(character) {
+        this.character = character;
+        this.anims.stop();
+        this.setTexture(CHARACTER_ATLAS, standingFrame(character, this.facing || "front"));
+        room.then((currentRoom) => currentRoom.send("PLAYER_CHANGED_CHARACTER", { character }));
+    }
+
     setFacing(direction, updateTexture = true) {
         this.facing = direction;
         this.scene.playerTexturePosition = direction;

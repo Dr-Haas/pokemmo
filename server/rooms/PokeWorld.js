@@ -65,6 +65,17 @@ exports.PokeWorld = class extends colyseus.Room {
             }, { except: client });
         });
 
+        // Character picked again from the in-game menu.
+        this.onMessage("PLAYER_CHANGED_CHARACTER", (client, data) => {
+            const player = this.players[client.sessionId];
+            if (!player || !data) {
+                return;
+            }
+
+            player.character = cleanCharacter(data.character);
+            this.broadcast("PLAYER_CHANGED_CHARACTER", { ...player }, { except: client });
+        });
+
         // Sent by a client once its map is loaded: real map and position.
         this.onMessage("PLAYER_READY", (client, data) => {
             const player = this.players[client.sessionId];
