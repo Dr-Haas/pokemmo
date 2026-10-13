@@ -10,7 +10,7 @@ export const HOUSE_TILEMAP = "house";
 const HOUSE_PREFIX = "house@";
 
 // World-layer tiles drawn as doors on the outdoor maps.
-const DOOR_TILES = new Set([444, 551, 558, 651, 658, 663]);
+const DOOR_TILES = new Set([444, 551, 557, 651, 658, 663]);
 
 const PALETTES = [
     { wall: 0xf0d8a8, wallBand: 0xc89858, floorA: 0xc89060, floorB: 0xb88050, rug: 0x5878c8, blanket: 0xd85050 },
@@ -48,9 +48,9 @@ export function findHouseDoors(scene) {
 
         // Zone on the ground just below the door: the player's feet reach 38px below it when
         // walking into the wall, and land 50px below it when leaving the house.
-        const zone = { x: (tile.x * TILE) - 8, y: (tile.y + 1) * TILE, width: TILE + 16, height: 44 };
-        const coveredByWarp = tiledWarps.some((warp) => zone.x + 8 < warp.x + warp.width
-            && zone.x + zone.width - 8 > warp.x
+        const zone = { x: (tile.x * TILE) - 16, y: (tile.y + 1) * TILE, width: TILE + 32, height: 44 };
+        const coveredByWarp = tiledWarps.some((warp) => zone.x + 16 < warp.x + warp.width
+            && zone.x + zone.width - 16 > warp.x
             && zone.y < warp.y + warp.height
             && zone.y + zone.height > warp.y);
 
