@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { ENTITY_SIZE } from "./constants/entity";
+import { applyEntitySize } from "./constants/entity";
 import { OTHER_PLAYER_NICKNAME_STYLE } from "./constants/nickname";
 import { CHARACTER_ATLAS, standingFrame, walkAnimation } from "./characters";
 
@@ -13,15 +13,13 @@ export default class OnlinePlayer extends Phaser.GameObjects.Sprite {
 
         this.character = config.character;
         this.setTexture(CHARACTER_ATLAS, standingFrame(this.character, "front"));
-        this.setDisplaySize(ENTITY_SIZE.width, ENTITY_SIZE.height);
         this.setDepth(5);
 
         this.map = config.map;
         console.log(`Map of ${config.playerId} is ${this.map}`);
 
         // Player Offset
-        this.body.setSize(ENTITY_SIZE.hitboxWidth, ENTITY_SIZE.hitboxHeight);
-        this.body.setOffset(0, ENTITY_SIZE.hitboxOffsetY);
+        applyEntitySize(this);
 
         // Display the player's chosen name above them
         this.playerNickname = this.scene.add.text(this.x, this.y, config.name || "Dresseur", OTHER_PLAYER_NICKNAME_STYLE)
@@ -36,6 +34,7 @@ export default class OnlinePlayer extends Phaser.GameObjects.Sprite {
         if (character && character !== this.character) {
             this.character = character;
             this.setTexture(CHARACTER_ATLAS, standingFrame(character, "front"));
+            applyEntitySize(this);
         }
     }
 

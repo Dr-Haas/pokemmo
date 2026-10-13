@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { room, getPlayerName } from './SocketServer';
 import { NICKNAME_STYLE } from "./constants/nickname";
-import { ENTITY_SIZE } from "./constants/entity";
+import { applyEntitySize } from "./constants/entity";
 import { houseExitFor, isHouseMap } from "./HouseInteriorManager";
 import { CHARACTER_ATLAS, standingFrame, walkAnimation } from "./characters";
 import { getPlayerCharacter } from "./playerName";
@@ -18,14 +18,12 @@ export default class Player extends Phaser.GameObjects.Sprite {
         // Character picked on the start screen
         this.character = getPlayerCharacter();
         this.setTexture(CHARACTER_ATLAS, standingFrame(this.character, this.scene.playerTexturePosition || "front"));
-        this.setDisplaySize(ENTITY_SIZE.width, ENTITY_SIZE.height);
 
         // Register cursors for player movement
         this.cursors = this.scene.input.keyboard.createCursorKeys();
 
         // Player Offset
-        this.body.setSize(ENTITY_SIZE.hitboxWidth, ENTITY_SIZE.hitboxHeight);
-        this.body.setOffset(0, ENTITY_SIZE.hitboxOffsetY);
+        applyEntitySize(this);
 
         // Player can't go out of the world
         this.body.setCollideWorldBounds(true)
@@ -126,6 +124,7 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.character = character;
         this.anims.stop();
         this.setTexture(CHARACTER_ATLAS, standingFrame(character, this.facing || "front"));
+        applyEntitySize(this);
         room.then((currentRoom) => currentRoom.send("PLAYER_CHANGED_CHARACTER", { character }));
     }
 
