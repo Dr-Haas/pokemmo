@@ -83,7 +83,7 @@ export default class StoryManager {
         });
     }
 
-    addActor({ id, name, sprite, tile, facing = "front", reach = 52, onTalk }) {
+    addActor({ id, name, sprite, tile, facing = "front", reach = 1, onTalk }) {
         const x = (tile.x * TILE) + 16;
         const feetY = (tile.y + 1) * TILE;
         const image = this.scene.add.image(x, feetY, CHARACTER_ATLAS, `${sprite}_${facing}.png`)
@@ -118,7 +118,7 @@ export default class StoryManager {
     }
 
     // Something to look at (a Poké Ball on the table, a fossil): talked to like a person.
-    addThing({ id, tile, reach = 52, onTalk, solid = false }) {
+    addThing({ id, tile, reach = 1, onTalk, solid = false }) {
         const actor = {
             id,
             tile,
@@ -149,7 +149,7 @@ export default class StoryManager {
             drawPokeBall(ball, (choice.ball.x * TILE) + 16, (choice.ball.y * TILE) + 8);
             const taken = choice.id === starter || choice.id === rivalStarter;
             ball.setVisible(!taken);
-            const actor = this.addThing({ id: `ball-${choice.id}`, tile: choice.ball, reach: 46, onTalk: () => this.chooseStarter(choice) });
+            const actor = this.addThing({ id: `ball-${choice.id}`, tile: choice.ball, onTalk: () => this.chooseStarter(choice) });
             actor.sprite.add(ball);
             return { choice, graphics: ball, actor };
         });
@@ -201,7 +201,7 @@ export default class StoryManager {
             name: "Vendeur",
             sprite: "tuxemartemployee",
             tile: { x: 2, y: 3 },
-            reach: 84,
+            reach: 2,
             onTalk: () => this.openShop(town)
         });
     }
@@ -222,8 +222,8 @@ export default class StoryManager {
                 id: `statue-${x}`,
                 tile: { x, y: 7 },
                 onTalk: () => this.say("", getStoryFlag("badge1")
-                    ? [`ARÈNE POKéMON D'ARGENTA`, `Champion : Pierre`, `Dresseurs vainqueurs : ${getTrainerName()}`]
-                    : ["ARÈNE POKéMON D'ARGENTA", "Champion : Pierre", "Dresseurs vainqueurs : -"])
+                    ? [`ARÈNE POKÉMON D'ARGENTA`, `Champion : Pierre`, `Dresseurs vainqueurs : ${getTrainerName()}`]
+                    : ["ARÈNE POKÉMON D'ARGENTA", "Champion : Pierre", "Dresseurs vainqueurs : -"])
             });
         });
     }
@@ -279,7 +279,7 @@ export default class StoryManager {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.talkKey)) {
-            const actor = this.nearestActor(feet);
+            const actor = this.actorInFront();
             if (actor) {
                 this.faceTowards(actor, feet);
                 this.run(() => actor.onTalk(actor));
@@ -297,17 +297,19 @@ export default class StoryManager {
         });
     }
 
-    nearestActor(feet) {
-        let best = null;
-        let bestDistance = Infinity;
-        this.actors.forEach((actor) => {
-            const distance = Phaser.Math.Distance.Between(feet.x, feet.y, actor.x, actor.feetY - 16);
-            if (distance <= actor.reach && distance < bestDistance) {
-                best = actor;
-                bestDistance = distance;
-            }
-        });
-        return best;
+    // As in the games: you talk to what is on the tile you face, or across a counter
+    // (reach 2) for the shop clerk. Never to someone beside or behind you.
+    actorInFront() {
+        const body = this.scene.player.body;
+        const [dx, dy] = DIRECTIONS[this.scene.player.facing] || DIRECTIONS.front;
+        // Half a tile beyond the edge of the player's body, on the side they face.
+        const probeX = body.center.x + (dx * ((body.width / 2) + (TILE / 2)));
+        const probeY = body.center.y + (dy * ((body.height / 2) + (TILE / 2)));
+        const front = { x: Math.floor(probeX / TILE), y: Math.floor(probeY / TILE) };
+        const at = (distance) => this.actors.find((actor) => (actor.reach || 1) >= distance
+            && actor.tile.x === front.x + (dx * (distance - 1))
+            && actor.tile.y === front.y + (dy * (distance - 1)));
+        return at(1) || at(2) || null;
     }
 
     faceTowards(actor, point) {
