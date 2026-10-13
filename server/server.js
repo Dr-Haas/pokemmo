@@ -1,8 +1,10 @@
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const colyseus = require('colyseus');
-const monitor = require("@colyseus/monitor").monitor;
+// Admin monitor is loaded only when enabled (see MONITOR below).
 // const socialRoutes = require("@colyseus/social/express").default;
 
 const PokeWorld = require('./rooms/PokeWorld').PokeWorld;
@@ -38,10 +40,22 @@ gameServer.define("poke_world", PokeWorld)
  */
 // app.use("/", socialRoutes);
 
-// register colyseus monitor AFTER registering your room handlers
-app.use("/colyseus", monitor(gameServer));
+// Admin monitor: only when explicitly enabled (MONITOR=1), it lets anyone see and close rooms.
+if (process.env.MONITOR === "1") {
+    const { monitor } = require("@colyseus/monitor");
+    app.use("/colyseus", monitor(gameServer));
+}
+
+// Serve the built game (client/dist) from this same server, so one URL does everything.
+const clientDist = process.env.CLIENT_DIST || path.join(__dirname, "..", "client", "dist");
+if (fs.existsSync(path.join(clientDist, "index.html"))) {
+    app.use(express.static(clientDist));
+    console.log(`Serving game files from ${clientDist}`);
+}
+
+app.get("/health", (request, response) => response.send("ok"));
 
 npcEmotionService.init();
 
 gameServer.listen(port);
-console.log(`Listening on ws://localhost:${port}`)
+console.log(`Listening on http://localhost:${port}`)

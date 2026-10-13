@@ -1,5 +1,6 @@
 import Phaser from "phaser";
-import { room } from './SocketServer';
+import { room, getPlayerName } from './SocketServer';
+import { NICKNAME_STYLE } from "./constants/nickname";
 import { ENTITY_SIZE } from "./constants/entity";
 
 
@@ -37,14 +38,16 @@ export default class Player extends Phaser.GameObjects.Sprite {
         this.canChangeMap = true;
 
         // Player nickname text
-        this.playerNickname = this.scene.add.text(this.x, (this.y - (this.height / 2)), 'Player').setOrigin(0.5, 0.5);
+        this.playerNickname = this.scene.add.text(this.x, (this.y - (this.height / 2)), getPlayerName(), NICKNAME_STYLE)
+            .setOrigin(0.5, 1)
+            .setDepth(20);
 
         // Add spacebar input
         this.spacebar = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
         this.scene.events.on('postupdate', () => {
             this.playerNickname.x = Math.round(this.x);
-            this.playerNickname.y = Math.round(this.y - (this.height / 2));
+            this.playerNickname.y = Math.round(this.y - (this.displayHeight / 2));
         });
     } 
 

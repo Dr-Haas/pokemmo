@@ -1,4 +1,4 @@
-const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+import { API_BASE_URL } from "../config";
 
 async function readJson(response) {
     const payload = await response.json();

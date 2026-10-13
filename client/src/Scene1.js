@@ -13,7 +13,8 @@ import AtlasJSON from "./assets/atlas/atlas";
 import AtlasPNG from "./assets/atlas/atlas.png";
 import PlayersAtlasJSON from "./assets/atlas/players";
 import PlayersAtlasPNG from "./assets/images/players/players.png";
-import { getPlayerData, getPokemonSpriteEntries, initializeGameState } from "./state/gameState";
+import { getPlayerData, getPokemonSpriteEntries, initializeGameState, setTrainerName } from "./state/gameState";
+import { nameReady, getPlayerName } from "./SocketServer";
 
 export class Scene1 extends Phaser.Scene {
     constructor() {
@@ -55,8 +56,12 @@ export class Scene1 extends Phaser.Scene {
 
         await Promise.all([
             initializeGameState(),
-            waitForPixelFont()
+            waitForPixelFont(),
+            nameReady
         ]);
+
+        // The trainer card and menus use the name chosen on the name screen.
+        setTrainerName(getPlayerName().toUpperCase());
 
         const spriteEntries = getPokemonSpriteEntries().filter(({ key }) => !this.textures.exists(key));
 

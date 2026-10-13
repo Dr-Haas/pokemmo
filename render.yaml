@@ -1,0 +1,11 @@
+# Render blueprint: New > Blueprint > pick this repo.
+services:
+  - type: web
+    name: pokemmo
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Private game: share the link as https://<your-app>.onrender.com/?code=<this value>
+      - key: GAME_CODE
+        generateValue: true

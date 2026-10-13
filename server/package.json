@@ -17,7 +17,6 @@
   "homepage": "https://github.com/colyseus/create-colyseus#readme",
   "devDependencies": {
     "@colyseus/loadtest": "^0.15.0",
-    "@colyseus/monitor": "^0.15.0",
     "@colyseus/redis-driver": "^0.15.0",
     "@colyseus/redis-presence": "^0.15.0",
     "@colyseus/uwebsockets-transport": "^0.15.0",

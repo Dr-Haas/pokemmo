@@ -103,6 +103,14 @@ export class Scene2 extends Phaser.Scene {
             this.roomMessageUnsubscribe = currentRoom.onMessage("*", (type, data) => {
                 this.handleRoomMessage(currentRoom, type, data);
             });
+
+            // Tell the server where we really are (the save may put us on another map
+            // than the town), and get the list of players already here in return.
+            currentRoom.send("PLAYER_READY", {
+                map: this.mapName,
+                x: this.player.x,
+                y: this.player.y
+            });
         });
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.isSceneShuttingDown = true;
@@ -268,18 +276,31 @@ export class Scene2 extends Phaser.Scene {
             }
         }
 
+        // Movement ended: also send the final position so others don't stay a few steps behind
+        // (read a moment later, once physics has fully stopped the player)
+        const sendMovementEnded = (position) => {
+            this.time.delayedCall(120, () => {
+                if (!this.player || !this.player.body) {
+                    return;
+                }
+                const x = this.player.x;
+                const y = this.player.y;
+                room.then((room) => room.send("PLAYER_MOVEMENT_ENDED", { position, x, y }));
+            });
+        };
+
         // Horizontal movement ended
         if (Phaser.Input.Keyboard.JustUp(cursors.left) === true) {
-            room.then((room) => room.send( "PLAYER_MOVEMENT_ENDED",{ position: 'left'}))
+            sendMovementEnded('left');
         } else if (Phaser.Input.Keyboard.JustUp(cursors.right) === true) {
-            room.then((room) => room.send( "PLAYER_MOVEMENT_ENDED",{ position: 'right'}))
+            sendMovementEnded('right');
         }
 
         // Vertical movement ended
         if (Phaser.Input.Keyboard.JustUp(cursors.up) === true) {
-            room.then((room) => room.send( "PLAYER_MOVEMENT_ENDED", {position: 'back'}))
+            sendMovementEnded('back');
         } else if (Phaser.Input.Keyboard.JustUp(cursors.down) === true) {
-            room.then((room) => room.send( "PLAYER_MOVEMENT_ENDED", {position: 'front'}))
+            sendMovementEnded('front');
         }
     }
 
@@ -373,6 +394,9 @@ export class Scene2 extends Phaser.Scene {
                 return;
             }
 
+            if (Number.isFinite(data.x) && Number.isFinite(data.y)) {
+                remotePlayer.setPosition(data.x, data.y);
+            }
             remotePlayer.stopWalking(data.position);
             return;
         }
@@ -395,6 +419,7 @@ export class Scene2 extends Phaser.Scene {
         const existingPlayer = onlinePlayers[playerData.sessionId];
         if (existingPlayer) {
             existingPlayer.map = playerData.map;
+            existingPlayer.setName(playerData.name);
             if (Number.isFinite(playerData.x) && Number.isFinite(playerData.y)) {
                 existingPlayer.setPosition(playerData.x, playerData.y);
             }
@@ -409,6 +434,7 @@ export class Scene2 extends Phaser.Scene {
             scene: this,
             worldLayer: this.worldLayer,
             playerId: playerData.sessionId,
+            name: playerData.name,
             key: playerData.sessionId,
             map: playerData.map,
             x: playerData.x,

@@ -1,37 +1,300 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>PokeMMO</title>
+    <meta name="theme-color" content="#0f1020">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PokeMMO">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --bg: #0f1020;
+        --pad: #1c1f3a;
+        --pad-edge: #2c3060;
+        --pad-glyph: #8c92c9;
+        --btn-a: #d8344f;
+        --btn-b: #6f4bd8;
+        --btn-edge: rgba(0, 0, 0, 0.35);
+        --ink: #f4f1e8;
+        --safe-l: env(safe-area-inset-left, 0px);
+        --safe-r: env(safe-area-inset-right, 0px);
+        --safe-b: env(safe-area-inset-bottom, 0px);
+        --safe-t: env(safe-area-inset-top, 0px);
+      }
+
       html, body {
         margin: 0;
         padding: 0;
         width: 100%;
         height: 100%;
-        background: #0f1020;
+        background: var(--bg);
+        overflow: hidden;
+        overscroll-behavior: none;
       }
 
       body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        font-family: "Press Start 2P", monospace;
+        color: var(--ink);
       }
 
       #game-container {
-        width: 800px;
-        height: 450px;
+        position: fixed;
+        inset: 0;
       }
 
       canvas {
         display: block;
       }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ---------- On-screen gamepad ---------- */
+      #touch-controls {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        touch-action: none;
+        z-index: 10;
+      }
+
+      #touch-controls > * {
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .dpad {
+        position: absolute;
+        left: calc(18px + var(--safe-l));
+        bottom: calc(22px + var(--safe-b));
+        width: 150px;
+        height: 150px;
+      }
+
+      /* the cross, drawn with two overlapping bars */
+      .dpad::before,
+      .dpad::after {
+        content: "";
+        position: absolute;
+        background: var(--pad);
+        border: 3px solid var(--pad-edge);
+        border-radius: 10px;
+        box-shadow: 0 4px 0 var(--btn-edge);
+      }
+      .dpad::before { left: 50px; top: 0; width: 44px; height: 144px; }
+      .dpad::after  { top: 50px; left: 0; width: 144px; height: 44px; }
+
+      .dpad .arrow {
+        position: absolute;
+        z-index: 1;
+        width: 0;
+        height: 0;
+        border: 9px solid transparent;
+        pointer-events: none;
+      }
+      .dpad .up    { left: 66px; top: 10px;  border-bottom-color: var(--pad-glyph); }
+      .dpad .down  { left: 66px; bottom: 10px; border-top-color: var(--pad-glyph); }
+      .dpad .left  { top: 66px; left: 10px;  border-right-color: var(--pad-glyph); }
+      .dpad .right { top: 66px; right: 10px; border-left-color: var(--pad-glyph); }
+
+      .dpad[data-dir="up"] .up       { border-bottom-color: var(--ink); }
+      .dpad[data-dir="down"] .down   { border-top-color: var(--ink); }
+      .dpad[data-dir="left"] .left   { border-right-color: var(--ink); }
+      .dpad[data-dir="right"] .right { border-left-color: var(--ink); }
+
+      .actions {
+        position: absolute;
+        right: calc(18px + var(--safe-r));
+        bottom: calc(22px + var(--safe-b));
+        width: 160px;
+        height: 130px;
+        pointer-events: none !important;
+      }
+
+      .btn {
+        position: absolute;
+        pointer-events: auto;
+        touch-action: none;
+        border: none;
+        color: var(--ink);
+        font: inherit;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 5px 0 var(--btn-edge);
+        transition: transform 40ms, box-shadow 40ms;
+      }
+      .btn.is-pressed {
+        transform: translateY(4px);
+        box-shadow: 0 1px 0 var(--btn-edge);
+      }
+
+      .btn-round {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        font-size: 18px;
+      }
+      .btn-a { right: 0; top: 0; background: var(--btn-a); }
+      .btn-b { left: 0; bottom: 0; background: var(--btn-b); }
+
+      .btn-start {
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(10px + var(--safe-b));
+        padding: 8px 16px;
+        border-radius: 14px;
+        background: var(--pad);
+        border: 2px solid var(--pad-edge);
+        font-size: 9px;
+        letter-spacing: 1px;
+        color: var(--pad-glyph);
+      }
+      .btn-start.is-pressed {
+        transform: translateX(-50%) translateY(3px);
+      }
+
+      /* Landscape: the controls float over the sides of the game. */
+      @media (orientation: landscape) {
+        .has-touch .dpad,
+        .has-touch .actions { opacity: 0.72; }
+        .has-touch .btn-start { opacity: 0.8; }
+      }
+
+      /* Portrait: game on top, Game Boy style controls underneath. */
+      @media (orientation: portrait) {
+        .has-touch #game-container {
+          bottom: auto;
+          height: min(58vh, calc(100vw * 9 / 16 + 24px));
+          top: var(--safe-t);
+        }
+        .has-touch .dpad,
+        .has-touch .actions { bottom: calc(70px + var(--safe-b)); }
+        .has-touch .btn-start { bottom: calc(24px + var(--safe-b)); }
+        .has-touch .rotate-hint { display: block; }
+      }
+
+      .rotate-hint {
+        display: none;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: calc(min(58vh, calc(100vw * 9 / 16 + 24px)) + 28px + var(--safe-t));
+        margin: 0;
+        text-align: center;
+        font-size: 8px;
+        line-height: 1.8;
+        color: #4b5088;
+        pointer-events: none;
+      }
+
+      /* ---------- Name screen ---------- */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        background: rgba(15, 16, 32, 0.88);
+        padding: 16px;
+      }
+
+      .card {
+        width: min(340px, 100%);
+        box-sizing: border-box;
+        background: #f4f1e8;
+        color: #1c1f3a;
+        border: 4px solid #1c1f3a;
+        border-radius: 8px;
+        box-shadow: inset 0 0 0 4px #c9c2ad;
+        padding: 22px 18px;
+        text-align: center;
+      }
+      .card h1 { font-size: 13px; line-height: 1.6; margin: 0 0 16px; }
+      .card p  { font-size: 9px; line-height: 1.8; margin: 0 0 16px; color: #4a4d6b; }
+      .card input {
+        width: 100%;
+        box-sizing: border-box;
+        font: inherit;
+        font-size: 16px;
+        padding: 12px;
+        border: 3px solid #1c1f3a;
+        border-radius: 4px;
+        background: #fff;
+        text-align: center;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      .card button {
+        margin-top: 14px;
+        width: 100%;
+        font: inherit;
+        font-size: 12px;
+        padding: 12px;
+        border: none;
+        border-radius: 4px;
+        background: var(--btn-a);
+        color: var(--ink);
+        box-shadow: 0 4px 0 #8f1f33;
+      }
+
+      #connection-error {
+        position: fixed;
+        top: calc(8px + var(--safe-t));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 30;
+        background: #d8344f;
+        color: var(--ink);
+        font-size: 9px;
+        line-height: 1.6;
+        padding: 8px 12px;
+        border-radius: 6px;
+        max-width: 90vw;
+        text-align: center;
+      }
     </style>
   </head>
   <body>
     <div id="game-container"></div>
+
+    <div id="touch-controls" hidden aria-hidden="true">
+      <div class="dpad">
+        <span class="arrow up"></span>
+        <span class="arrow down"></span>
+        <span class="arrow left"></span>
+        <span class="arrow right"></span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-round btn-a" data-key="a">A</button>
+        <button class="btn btn-round btn-b" data-key="b">B</button>
+      </div>
+      <button class="btn btn-start" data-key="start">START</button>
+    </div>
+    <p class="rotate-hint">Tourne ton téléphone<br>pour jouer en plein écran</p>
+
+    <div id="name-screen" class="overlay" hidden>
+      <form class="card" autocomplete="off">
+        <h1>Ton nom de dresseur</h1>
+        <p>C'est le nom que les autres joueurs verront au-dessus de ta tête.</p>
+        <input name="name" type="text" placeholder="Sacha" enterkeyhint="go" autocapitalize="words" spellcheck="false">
+        <button type="submit">Jouer</button>
+      </form>
+    </div>
+
+    <div id="connection-error" hidden>Serveur multijoueur injoignable. Tu joues hors ligne.</div>
   </body>
 </html>

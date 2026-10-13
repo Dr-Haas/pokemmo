@@ -1,74 +1,126 @@
 const colyseus = require('colyseus');
 
-const players = {};
+const DEFAULT_SPAWN = { map: 'town', x: 352, y: 1216 };
+const MAX_NAME_LENGTH = 12;
+
+function cleanName(raw) {
+    const name = String(raw || '').replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, MAX_NAME_LENGTH);
+    return name || 'Dresseur';
+}
+
+function isFiniteNumber(value) {
+    return typeof value === 'number' && Number.isFinite(value);
+}
+
 exports.PokeWorld = class extends colyseus.Room {
     onCreate(options) {
         console.log('ON CREATE');
+        this.maxClients = 16;
+        this.players = {};
 
-        this.onMessage("PLAYER_MOVED", (player, data) => {
+        this.onMessage("PLAYER_MOVED", (client, data) => {
+            const player = this.players[client.sessionId];
+            if (!player || !data || !isFiniteNumber(data.x) || !isFiniteNumber(data.y)) {
+                return;
+            }
 
-            console.log("PLAYER_MOVED",data);
+            player.x = data.x;
+            player.y = data.y;
 
-            players[player.sessionId].x = data.x;
-            players[player.sessionId].y = data.y;
-
-            this.broadcast("PLAYER_MOVED",{
-                ...players[player.sessionId],
+            this.broadcast("PLAYER_MOVED", {
+                ...player,
                 position: data.position
-            }, {except: player})
-          });
+            }, { except: client });
+        });
 
+        this.onMessage("PLAYER_MOVEMENT_ENDED", (client, data) => {
+            const player = this.players[client.sessionId];
+            if (!player) {
+                return;
+            }
 
-          this.onMessage("PLAYER_MOVEMENT_ENDED", (player, data) => {
-            this.broadcast("PLAYER_MOVEMENT_ENDED",{
-                  
-                sessionId: player.sessionId,
-                map: players[player.sessionId].map,
-                position: data.position
-            }, {except: player})
-          });
+            if (data && isFiniteNumber(data.x) && isFiniteNumber(data.y)) {
+                player.x = data.x;
+                player.y = data.y;
+            }
 
+            this.broadcast("PLAYER_MOVEMENT_ENDED", {
+                sessionId: client.sessionId,
+                name: player.name,
+                map: player.map,
+                x: player.x,
+                y: player.y,
+                position: data && data.position
+            }, { except: client });
+        });
 
-          this.onMessage("PLAYER_CHANGED_MAP", (player, data) => {
-          
-            players[player.sessionId].map = data.map;
-    
-            player.send( "CURRENT_PLAYERS",{players: players})
+        // Sent by a client once its map is loaded: real map and position.
+        this.onMessage("PLAYER_READY", (client, data) => {
+            const player = this.players[client.sessionId];
+            if (!player || !data) {
+                return;
+            }
 
-            this.broadcast("PLAYER_CHANGED_MAP",{
-               
-                sessionId: player.sessionId,
-                map: players[player.sessionId].map,
-                x: 300,
-                y: 75,
-                players: players
-            })
-          });
+            if (typeof data.map === 'string') {
+                player.map = data.map;
+            }
+            if (isFiniteNumber(data.x) && isFiniteNumber(data.y)) {
+                player.x = data.x;
+                player.y = data.y;
+            }
 
-         
+            client.send("CURRENT_PLAYERS", { players: this.players });
+            this.broadcast("PLAYER_CHANGED_MAP", { ...player }, { except: client });
+        });
+
+        this.onMessage("PLAYER_CHANGED_MAP", (client, data) => {
+            const player = this.players[client.sessionId];
+            if (!player || !data || typeof data.map !== 'string') {
+                return;
+            }
+
+            player.map = data.map;
+
+            client.send("CURRENT_PLAYERS", { players: this.players });
+
+            this.broadcast("PLAYER_CHANGED_MAP", {
+                ...player,
+                players: this.players
+            });
+        });
     }
 
-    onJoin(player, options) {
-        console.log('ON JOIN');
+    // Optional private access: set GAME_CODE on the server and share
+    // the game link with ?code=... so only your friends can join.
+    onAuth(client, options) {
+        const expected = process.env.GAME_CODE;
+        if (!expected) {
+            return true;
+        }
+        if (options && options.code === expected) {
+            return true;
+        }
+        throw new colyseus.ServerError(401, 'Code de partie invalide');
+    }
 
-        players[player.sessionId] = {
-            sessionId: player.sessionId,
-            map: 'town',
-            x: 352,
-            y: 1216
+    onJoin(client, options) {
+        const name = cleanName(options && options.name);
+        console.log('ON JOIN', name);
+
+        this.players[client.sessionId] = {
+            sessionId: client.sessionId,
+            name,
+            ...DEFAULT_SPAWN
         };
-
-        setTimeout(() => player.send("CURRENT_PLAYERS",{players: players}), 500);
-        this.broadcast("PLAYER_JOINED",{...players[player.sessionId]}, {except: player});
+        // Others see this player once it sends PLAYER_READY with its real position.
     }
 
-   
+    onLeave(client, consented) {
+        const player = this.players[client.sessionId];
+        console.log('ON LEAVE', player && player.name);
 
-    onLeave(player, consented) {
-        console.log('ON LEAVE')
-
-        this.broadcast("PLAYER_LEFT",{ sessionId: player.sessionId, map: players[player.sessionId].map });
-        delete players[player.sessionId];
+        this.broadcast("PLAYER_LEFT", { sessionId: client.sessionId, map: player && player.map });
+        delete this.players[client.sessionId];
     }
 
     onDispose() {

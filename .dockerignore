@@ -1,0 +1,6 @@
+**/node_modules
+client/dist
+.git
+server/.env
+server/.molroo-npc-cache.json
+docs
