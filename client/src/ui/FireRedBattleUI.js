@@ -63,9 +63,11 @@ const LAYOUT = {
     commandPanel: { width: 242, height: 124, margin: 16 },
     partyPanel: { x: 64, y: 48, width: 672, height: 340 }
 };
+// Sprites are 96 px with empty margins: one scale for all, so a Roucool stays smaller
+// than an Onix, capped so the biggest ones still fit.
 const BATTLE_SPRITE_BOUNDS = {
-    enemy: { maxWidth: 160, maxHeight: 160 },
-    player: { maxWidth: 180, maxHeight: 180 }
+    enemy: { scale: 1.75, maxWidth: 190, maxHeight: 150 },
+    player: { scale: 2, maxWidth: 230, maxHeight: 170 }
 };
 const DAMAGE_VARIANCE_MIN = 0.85;
 const DAMAGE_VARIANCE_MAX = 1;
@@ -547,6 +549,10 @@ export default class FireRedBattleUI {
 
         if (slot.sprite.texture?.key !== textureKey && this.scene.textures.exists(textureKey)) {
             slot.sprite.setTexture(textureKey);
+        }
+        // No picture could be loaded: show nothing rather than the placeholder character.
+        if (slot.sprite.texture?.key !== textureKey) {
+            slot.sprite.setVisible(false);
         }
 
         fitSprite(slot.sprite, BATTLE_SPRITE_BOUNDS[boundsKey]);
@@ -1117,12 +1123,16 @@ export default class FireRedBattleUI {
             return false;
         }
 
-        await new Promise((resolve) => {
-            this.scene.load.image(key, resolvedUrl);
+        const load = (url) => new Promise((resolve) => {
+            this.scene.load.image(key, url);
             this.scene.load.once(Phaser.Loader.Events.COMPLETE, resolve);
             this.scene.load.start();
         });
 
+        await load(resolvedUrl);
+        if (!this.scene.textures.exists(key) && fallbackUrl && fallbackUrl !== resolvedUrl) {
+            await load(fallbackUrl);
+        }
         return this.scene.textures.exists(key);
     }
 
@@ -1296,14 +1306,59 @@ function wrapMessage(message, width, maxLines) {
 }
 
 function fitSprite(sprite, bounds) {
-    const source = sprite.texture?.getSourceImage();
-    const width = source?.naturalWidth || source?.width || 1;
-    const height = source?.naturalHeight || source?.height || 1;
-    const scaleX = bounds.maxWidth / width;
-    const scaleY = bounds.maxHeight / height;
-    const scale = Math.min(scaleX, scaleY, 1);
+    // The frame, not the whole image (a texture can be an atlas).
+    const width = sprite.frame?.realWidth || 1;
+    const height = sprite.frame?.realHeight || 1;
+    const content = visibleBounds(sprite);
+    const scale = Math.min(bounds.scale, bounds.maxWidth / content.width, bounds.maxHeight / content.height);
 
     sprite.setDisplaySize(Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)));
+    // Feet on the platform: the bottom of the visible pixels sits at the sprite's position.
+    sprite.setOrigin((content.x + (content.width / 2)) / width, (content.y + content.height) / height);
+}
+
+const visibleBoundsCache = new Map();
+
+// Box around the non-transparent pixels of the sprite's frame.
+function visibleBounds(sprite) {
+    const frame = sprite.frame;
+    const key = `${sprite.texture?.key}:${frame?.name}`;
+    if (visibleBoundsCache.has(key)) {
+        return visibleBoundsCache.get(key);
+    }
+
+    const full = { x: 0, y: 0, width: frame?.realWidth || 1, height: frame?.realHeight || 1 };
+    let bounds = full;
+    try {
+        const canvas = document.createElement("canvas");
+        canvas.width = frame.cutWidth;
+        canvas.height = frame.cutHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(frame.source.image, frame.cutX, frame.cutY, frame.cutWidth, frame.cutHeight, 0, 0, frame.cutWidth, frame.cutHeight);
+        const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+        let minX = canvas.width;
+        let minY = canvas.height;
+        let maxX = -1;
+        let maxY = -1;
+        for (let y = 0; y < canvas.height; y += 1) {
+            for (let x = 0; x < canvas.width; x += 1) {
+                if (data[((y * canvas.width) + x) * 4 + 3] > 16) {
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                }
+            }
+        }
+        if (maxX >= 0) {
+            bounds = { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+        }
+    } catch (error) {
+        // Picture we can't read back (cross-origin): use the whole frame.
+    }
+
+    visibleBoundsCache.set(key, bounds);
+    return bounds;
 }
 
 function clamp(value, min, max) {
@@ -1352,9 +1407,12 @@ async function resolveSpriteUrl(primaryUrl, fallbackUrl) {
     return null;
 }
 
+// The game loads sprites with fetch, so a server must allow it (CORS): an <img> that only
+// displays fine (Showdown's GIFs) would leave the Pokémon without a picture.
 function canLoadImage(url) {
     return new Promise((resolve) => {
         const image = new Image();
+        image.crossOrigin = "anonymous";
         image.onload = () => resolve(true);
         image.onerror = () => resolve(false);
         image.src = url;
